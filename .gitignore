@@ -1,0 +1,48 @@
+# Environment & secrets
+.env
+.env.local
+.env.production
+
+# Database
+*.db
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Claude Code session settings
+.claude/settings.local.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test & coverage
+.pytest_cache/
+htmlcov/
+.coverage
+coverage.xml
+
+# Pitch deck and demo files
+*.pptx
+LeadFlow_Pitch.md
+create_ppt.py
+seed_demo.py

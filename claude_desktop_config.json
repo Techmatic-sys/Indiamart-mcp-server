@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "indiamart": {
+      "command": "python",
+      "args": ["mcp_server.py"],
+      "cwd": "/ABSOLUTE/PATH/TO/indiamart-mcp-server",
+      "env": {
+        "INDIAMART_API_KEY": "your_crm_api_key_here",
+        "INDIAMART_GLID": "your_glid_here"
+      }
+    }
+  }
+}

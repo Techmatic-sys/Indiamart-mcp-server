@@ -1,0 +1,19 @@
+// Add this block inside your ~/.openclaw/openclaw.json under skills.mcpServers
+// Full docs: https://docs.openclaw.ai/tools/skills-config
+{
+  skills: {
+    mcpServers: {
+      indiamart: {
+        command: "python",
+        // CHANGE THIS to the absolute path where you cloned the repo
+        args: ["mcp_server.py"],
+        cwd: "/absolute/path/to/indiamart-mcp-server",
+        env: {
+          INDIAMART_API_KEY: "your_crm_api_key_here",
+          INDIAMART_GLID: "your_glid_here",
+          DB_PATH: "./leads.db"
+        }
+      }
+    }
+  }
+}

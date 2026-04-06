@@ -1,0 +1,65 @@
+# smithery.yaml — required for Smithery.ai marketplace listing
+name: indiamart-mcp-server
+displayName: "IndiaMART Lead Manager"
+description: >
+  Connect Claude AI to your IndiaMART seller account. Automatically
+  fetch, search, analyze, and reply to buyer enquiries using natural
+  language. Includes AI lead scoring, pipeline management, and analytics.
+version: "1.1.0"
+license: MIT
+author: Vasanth
+homepage: https://github.com/Techmatic-sys/indiamart-mcp-server
+categories:
+  - crm
+  - sales
+  - india
+  - leads
+tags:
+  - indiamart
+  - b2b
+  - leads
+  - crm
+  - india
+  - sme
+transport: stdio
+entrypoint: "python mcp_server.py"
+install:
+  pip: "pip install indiamart-mcp-server"
+  manual: |
+    git clone https://github.com/Techmatic-sys/indiamart-mcp-server
+    cd indiamart-mcp-server
+    pip install -r requirements.txt
+env:
+  INDIAMART_API_KEY:
+    description: "Your IndiaMART CRM API key from Lead Manager settings"
+    required: true
+    secret: true
+  INDIAMART_GLID:
+    description: "Your IndiaMART Global Login ID (GLID)"
+    required: true
+    secret: false
+  DB_PATH:
+    description: "Path to SQLite database file"
+    required: false
+    default: "./leads.db"
+tools:
+  - name: tool_get_recent_leads
+    description: Fetch leads from the last N hours
+  - name: tool_get_leads_by_date
+    description: Fetch leads for a specific date range
+  - name: tool_get_lead_stats
+    description: Get analytics — total, by city, by product
+  - name: tool_search_leads
+    description: Search leads by keyword
+  - name: tool_get_lead_by_id
+    description: Get full details of one specific lead
+  - name: tool_draft_reply
+    description: Draft a professional reply to a buyer
+  - name: tool_export_leads_csv
+    description: Export leads as downloadable CSV
+  - name: tool_sync_latest_leads
+    description: Sync last 24h of leads from IndiaMART API
+  - name: tool_update_lead_stage
+    description: Update pipeline stage of a lead (new/contacted/qualified/won/lost)
+  - name: tool_add_note
+    description: Add a private note to a lead for future reference
