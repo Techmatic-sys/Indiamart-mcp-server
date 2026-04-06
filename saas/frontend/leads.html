@@ -1,0 +1,1194 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leads — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <style>
+        /* ── Filter Bar ── */
+        .filters-section {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 18px 22px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow-sm);
+            transition: all var(--transition);
+        }
+        .filters-row {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        .filters-row:last-child { margin-bottom: 0; }
+        .filter-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        .filter-label {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+        }
+
+        /* Search with slide-in animation */
+        .search-wrap {
+            position: relative;
+            flex: 1;
+            min-width: 220px;
+        }
+        .search-wrap i {
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-muted);
+            font-size: 13px;
+            pointer-events: none;
+            transition: color 0.2s;
+        }
+        .search-wrap .filter-input:focus ~ i,
+        .search-wrap .filter-input:focus + i { color: var(--accent); }
+        .filter-input {
+            padding: 9px 14px;
+            border: 1.5px solid var(--border-input);
+            border-radius: 24px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            outline: none;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            transition: all 0.25s ease;
+        }
+        .filter-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+        }
+        .filter-input::placeholder { color: var(--text-muted); }
+        .search-wrap .filter-input {
+            width: 100%;
+            padding-left: 40px;
+        }
+
+        /* Stage filter pills */
+        .stage-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 14px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border-input);
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            transition: all 0.22s cubic-bezier(.4,0,.2,1);
+            user-select: none;
+        }
+        .stage-pill:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+        .stage-pill .sdot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            transition: transform 0.2s;
+        }
+        .stage-pill.active { color: #fff; border-color: transparent; }
+        .stage-pill.active .sdot { transform: scale(1.3); }
+        .stage-pill[data-stage="New"].active { background: var(--blue); }
+        .stage-pill[data-stage="Contacted"].active { background: var(--orange); }
+        .stage-pill[data-stage="Qualified"].active { background: var(--purple); }
+        .stage-pill[data-stage="Proposal"].active { background: var(--navy-deep); }
+        .stage-pill[data-stage="Won"].active { background: var(--green); }
+        .stage-pill[data-stage="Lost"].active { background: var(--red); }
+
+        /* Score toggle buttons */
+        .score-toggle {
+            padding: 6px 14px;
+            border-radius: 24px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            border: 1.5px solid var(--border-input);
+            background: var(--bg-input);
+            color: var(--text-secondary);
+            transition: all 0.22s cubic-bezier(.4,0,.2,1);
+            user-select: none;
+        }
+        .score-toggle:hover { transform: translateY(-1px); box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .score-toggle.active-hot { background: linear-gradient(135deg, #e94560, #fd7e14); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(233,69,96,0.3); }
+        .score-toggle.active-warm { background: linear-gradient(135deg, #fd7e14, #ffc107); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(253,126,20,0.3); }
+        .score-toggle.active-cold { background: linear-gradient(135deg, #007bff, #6f42c1); color: #fff; border-color: transparent; box-shadow: 0 4px 14px rgba(0,123,255,0.3); }
+
+        .clear-filters-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 6px 14px;
+            border-radius: 24px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent);
+            transition: all 0.2s;
+        }
+        .clear-filters-btn:hover { background: rgba(233,69,96,0.08); }
+
+        /* ── Leads Table ── */
+        .leads-card {
+            overflow: hidden;
+            border-radius: var(--radius);
+        }
+        .leads-card .card-header {
+            background: var(--bg-card);
+        }
+        .lead-count-badge {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            font-weight: 500;
+        }
+        table { width: 100%; border-collapse: collapse; }
+        thead th {
+            padding: 13px 18px;
+            text-align: left;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            background: var(--bg-tertiary);
+            border-bottom: 1.5px solid var(--border-secondary);
+            white-space: nowrap;
+            position: sticky;
+            top: 0;
+        }
+        thead th:first-child { width: 44px; }
+        tbody td {
+            padding: 14px 18px;
+            border-bottom: 1px solid var(--border-secondary);
+            font-size: 13px;
+            color: var(--text-primary);
+            transition: background 0.2s, transform 0.15s;
+        }
+        tbody tr {
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        tbody tr:nth-child(even) td { background: var(--bg-tertiary); }
+        tbody tr:hover td {
+            background: rgba(233,69,96,0.04);
+        }
+        [data-theme="dark"] tbody tr:hover td {
+            background: rgba(233,69,96,0.08);
+        }
+        tbody tr:hover { transform: scale(1.002); }
+        tbody tr:last-child td { border-bottom: none; }
+
+        .lead-name-cell { font-weight: 600; color: var(--text-primary); }
+        .lead-name-cell.unread { position: relative; }
+        .lead-name-cell.unread::before {
+            content: '';
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: var(--accent);
+            display: inline-block;
+            margin-right: 8px;
+            vertical-align: middle;
+            box-shadow: 0 0 6px rgba(233,69,96,0.4);
+            animation: unreadPulse 2s infinite;
+        }
+        @keyframes unreadPulse {
+            0%, 100% { box-shadow: 0 0 4px rgba(233,69,96,0.3); }
+            50% { box-shadow: 0 0 10px rgba(233,69,96,0.6); }
+        }
+        .lead-sub { color: var(--text-muted); font-size: 11px; margin-top: 2px; }
+        .lead-product {
+            color: var(--text-secondary);
+            max-width: 160px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Score badges with glow for hot leads */
+        .badge-score { display: inline-flex; align-items: center; gap: 4px; padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; }
+        .badge-score.hot {
+            background: linear-gradient(135deg, rgba(233,69,96,0.15), rgba(253,126,20,0.15));
+            color: #e94560;
+            animation: hotGlow 2s ease-in-out infinite;
+        }
+        @keyframes hotGlow {
+            0%, 100% { box-shadow: 0 0 4px rgba(233,69,96,0.2); }
+            50% { box-shadow: 0 0 16px rgba(233,69,96,0.5), 0 0 30px rgba(233,69,96,0.2); }
+        }
+        .badge-score.warm {
+            background: linear-gradient(135deg, rgba(253,126,20,0.15), rgba(255,193,7,0.15));
+            color: #fd7e14;
+        }
+        .badge-score.cold {
+            background: linear-gradient(135deg, rgba(0,123,255,0.12), rgba(111,66,193,0.12));
+            color: #007bff;
+        }
+
+        /* Checkbox */
+        .row-checkbox {
+            width: 17px;
+            height: 17px;
+            cursor: pointer;
+            accent-color: var(--accent);
+            border-radius: 4px;
+        }
+
+        /* Star button with animated fill */
+        .star-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 16px;
+            padding: 4px;
+            transition: all 0.25s cubic-bezier(.4,0,.2,1);
+            position: relative;
+        }
+        .star-btn:hover { color: #ffc107; transform: scale(1.2); }
+        .star-btn.starred {
+            color: #ffc107;
+            animation: starPop 0.4s cubic-bezier(.4,0,.2,1);
+        }
+        @keyframes starPop {
+            0% { transform: scale(1); }
+            30% { transform: scale(1.4) rotate(-8deg); }
+            60% { transform: scale(0.9) rotate(4deg); }
+            100% { transform: scale(1) rotate(0); }
+        }
+        .star-btn.starred::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 50%;
+            background: rgba(255,193,7,0.15);
+            animation: starRing 0.5s ease-out forwards;
+            z-index: -1;
+        }
+        @keyframes starRing {
+            0% { transform: scale(0); opacity: 1; }
+            100% { transform: scale(1.6); opacity: 0; }
+        }
+
+        /* Row action buttons */
+        .action-btns { display: flex; gap: 4px; }
+        .action-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            color: var(--text-tertiary);
+            font-size: 13px;
+            text-decoration: none;
+        }
+        .action-btn:hover { background: var(--bg-tertiary); color: var(--text-primary); transform: translateY(-1px); }
+        .action-btn.ai { color: var(--purple); }
+        .action-btn.ai:hover { background: rgba(156,39,176,0.1); }
+
+        /* ── Pagination ── */
+        .pagination {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 22px;
+            border-top: 1px solid var(--border-secondary);
+        }
+        .pagination-info { font-size: 13px; color: var(--text-tertiary); }
+        .pagination-btns { display: flex; gap: 4px; }
+        .page-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            border: 1.5px solid var(--border-input);
+            background: var(--bg-card);
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .page-btn:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        .page-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; box-shadow: 0 4px 12px rgba(233,69,96,0.25); }
+        .page-btn:disabled { opacity: 0.3; cursor: not-allowed; transform: none; }
+
+        /* ── Empty State ── */
+        .leads-empty {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .leads-empty .emoji-illustration {
+            font-size: 72px;
+            margin-bottom: 16px;
+            animation: emptyBounce 2s ease-in-out infinite;
+        }
+        @keyframes emptyBounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        .leads-empty h3 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+        .leads-empty p {
+            font-size: 14px;
+            color: var(--text-muted);
+            max-width: 360px;
+            margin: 0 auto;
+        }
+
+        /* ── Bulk Action Bar ── */
+        .bulk-bar {
+            position: fixed;
+            bottom: -80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--bg-sidebar);
+            color: #fff;
+            border-radius: 18px;
+            padding: 12px 22px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.35);
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            z-index: 900;
+            transition: bottom 0.35s cubic-bezier(.4,0,.2,1);
+            white-space: nowrap;
+            border: 1px solid rgba(255,255,255,0.08);
+            backdrop-filter: blur(16px);
+        }
+        .bulk-bar.show { bottom: 32px; }
+        .bulk-count { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.9); }
+        .bulk-divider { width: 1px; height: 24px; background: rgba(255,255,255,0.12); }
+        .bulk-btn {
+            padding: 8px 16px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-family: 'Inter', sans-serif;
+        }
+        .bulk-btn-primary { background: var(--accent); color: #fff; }
+        .bulk-btn-primary:hover { background: var(--accent-light); transform: translateY(-1px); }
+        .bulk-btn-ghost { background: rgba(255,255,255,0.08); color: rgba(255,255,255,0.8); }
+        .bulk-btn-ghost:hover { background: rgba(255,255,255,0.16); }
+        .bulk-btn-danger { background: rgba(220,53,69,0.2); color: #ff6b81; }
+        .bulk-btn-danger:hover { background: rgba(220,53,69,0.35); }
+        .bulk-stage-select {
+            padding: 8px 14px;
+            border-radius: 10px;
+            font-size: 12px;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            background: rgba(255,255,255,0.08);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.2s;
+        }
+        .bulk-stage-select:focus { background: rgba(255,255,255,0.16); }
+        .bulk-stage-select option { color: #333; background: #fff; }
+
+        /* ── Detail Panel ── */
+        .detail-panel-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 14px;
+        }
+        .detail-panel-header .panel-header-info { flex: 1; min-width: 0; }
+        .panel-name { font-size: 18px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+        .panel-company { font-size: 13px; color: var(--text-tertiary); margin-bottom: 8px; }
+
+        .panel-section { padding: 20px 0; border-bottom: 1px solid var(--border-secondary); }
+        .panel-section:last-child { border-bottom: none; }
+        .section-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .section-title i { font-size: 12px; color: var(--accent); }
+
+        .contact-grid { display: flex; flex-direction: column; gap: 10px; }
+        .contact-row { display: flex; align-items: center; gap: 10px; }
+        .contact-icon {
+            width: 34px;
+            height: 34px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .contact-icon.phone { background: rgba(40,167,69,0.1); color: var(--green); }
+        .contact-icon.email { background: rgba(0,123,255,0.1); color: var(--blue); }
+        .contact-icon.whatsapp { background: rgba(37,211,102,0.1); color: #25d366; }
+        .contact-icon.location { background: rgba(233,69,96,0.1); color: var(--accent); }
+        .contact-info { flex: 1; min-width: 0; }
+        .contact-label { font-size: 10px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; }
+        .contact-value { font-size: 13px; font-weight: 500; color: var(--text-primary); }
+        .contact-value a { color: var(--text-primary); text-decoration: none; }
+        .contact-value a:hover { color: var(--accent); }
+
+        /* AI Insights Card */
+        .ai-insights-card {
+            background: linear-gradient(135deg, rgba(67,97,238,0.06), rgba(247,37,133,0.06));
+            border-radius: 12px;
+            padding: 16px;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(156,39,176,0.12);
+        }
+        [data-theme="dark"] .ai-insights-card {
+            background: linear-gradient(135deg, rgba(67,97,238,0.1), rgba(247,37,133,0.1));
+        }
+        .ai-card-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+        .ai-card-header i { color: var(--purple); font-size: 16px; }
+        .ai-card-title { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+
+        .intent-bar-wrap { margin-bottom: 14px; }
+        .intent-label { display: flex; justify-content: space-between; margin-bottom: 6px; }
+        .intent-text { font-size: 12px; font-weight: 600; color: var(--text-secondary); }
+        .intent-score { font-size: 16px; font-weight: 800; }
+        .intent-score.high { color: var(--green); }
+        .intent-score.mid { color: var(--orange); }
+        .intent-score.low { color: var(--blue); }
+        .intent-bar-bg { height: 8px; background: var(--border-secondary); border-radius: 4px; overflow: hidden; }
+        .intent-bar-fill { height: 100%; border-radius: 4px; transition: width 0.8s cubic-bezier(.4,0,.2,1); }
+        .intent-bar-fill.high { background: linear-gradient(90deg, #28a745, #20c997); }
+        .intent-bar-fill.mid { background: linear-gradient(90deg, #fd7e14, #ffc107); }
+        .intent-bar-fill.low { background: linear-gradient(90deg, #007bff, #6f42c1); }
+
+        .ai-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .ai-tag { padding: 3px 10px; border-radius: 16px; font-size: 11px; font-weight: 600; }
+        .ai-tag.urgency-high { background: rgba(220,53,69,0.1); color: var(--red); }
+        .ai-tag.urgency-medium { background: rgba(253,126,20,0.1); color: var(--orange); }
+        .ai-tag.urgency-low { background: rgba(0,123,255,0.1); color: var(--blue); }
+        .ai-tag.personality { background: rgba(111,66,193,0.1); color: #6f42c1; }
+
+        .tip-item { display: flex; align-items: flex-start; gap: 6px; font-size: 12px; color: var(--text-primary); line-height: 1.5; margin-bottom: 4px; }
+        .tip-item i { color: var(--accent); font-size: 10px; margin-top: 4px; flex-shrink: 0; }
+
+        /* Stage select in panel */
+        .stage-select {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border-input);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+        .stage-select:focus { border-color: var(--accent); }
+
+        .deal-input {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border-input);
+            border-radius: 10px;
+            font-family: 'Inter', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            background: var(--bg-input);
+            color: var(--text-primary);
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .deal-input:focus { border-color: var(--accent); }
+
+        /* Activity timeline */
+        .add-activity-form {
+            background: var(--bg-tertiary);
+            border-radius: 10px;
+            padding: 14px;
+            margin-bottom: 14px;
+        }
+        .activity-type-select, .activity-text-input {
+            padding: 8px 12px;
+            border: 1.5px solid var(--border-input);
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 12px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            outline: none;
+        }
+        .activity-text-input { flex: 1; resize: none; font-size: 13px; }
+        .activity-type-select:focus, .activity-text-input:focus { border-color: var(--accent); }
+
+        .timeline { display: flex; flex-direction: column; }
+        .timeline-item { display: flex; gap: 12px; padding: 10px 0; position: relative; }
+        .timeline-dot-wrap { display: flex; flex-direction: column; align-items: center; flex-shrink: 0; padding-top: 2px; }
+        .timeline-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+        .timeline-dot.call { background: var(--green); }
+        .timeline-dot.email { background: var(--blue); }
+        .timeline-dot.note { background: var(--yellow); }
+        .timeline-dot.whatsapp { background: #25d366; }
+        .timeline-dot.meeting { background: var(--purple); }
+        .timeline-dot.stage_change { background: var(--accent); }
+        .timeline-dot.created { background: #6c757d; }
+        .timeline-line { width: 2px; flex: 1; background: var(--border-secondary); margin-top: 4px; }
+        .timeline-item:last-child .timeline-line { display: none; }
+        .timeline-content { flex: 1; min-width: 0; }
+        .timeline-type { font-size: 11px; font-weight: 700; text-transform: uppercase; color: var(--text-muted); letter-spacing: 0.4px; }
+        .timeline-text { font-size: 13px; color: var(--text-primary); margin-top: 3px; line-height: 1.5; }
+        .timeline-time { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+
+        /* Responsive mobile cards */
+        @media (max-width: 768px) {
+            .leads-table-wrap table thead { display: none; }
+            .leads-table-wrap table, .leads-table-wrap tbody, .leads-table-wrap tr, .leads-table-wrap td { display: block; width: 100%; }
+            .leads-table-wrap tbody tr {
+                margin-bottom: 12px;
+                border-radius: 12px;
+                border: 1px solid var(--border-primary);
+                background: var(--bg-card);
+                padding: 14px 16px;
+                box-shadow: var(--shadow-sm);
+            }
+            .leads-table-wrap tbody tr td { border-bottom: none !important; padding: 4px 0 !important; }
+            .leads-table-wrap tbody tr td:first-child { display: none; }
+            .bulk-bar { width: calc(100% - 32px); flex-wrap: wrap; gap: 8px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+
+    <div class="main">
+        <div id="topbarContainer"></div>
+
+        <div class="content">
+            <!-- ── Filters ── -->
+            <div class="filters-section animate-fade-in-up">
+                <div class="filters-row">
+                    <div class="search-wrap">
+                        <i class="fas fa-search"></i>
+                        <input type="text" class="filter-input" id="searchInput" placeholder="Search by name, email, product, city…" oninput="debounceSearch()">
+                    </div>
+                    <input type="date" class="filter-input" id="filterDateFrom" onchange="applyFilters()" title="From date" style="border-radius:10px;">
+                    <input type="date" class="filter-input" id="filterDateTo" onchange="applyFilters()" title="To date" style="border-radius:10px;">
+                    <button class="clear-filters-btn" onclick="clearFilters()"><i class="fas fa-times-circle"></i> Clear</button>
+                </div>
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <span class="filter-label">Stage</span>
+                        <button class="stage-pill" data-stage="New" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--blue)"></span>New</button>
+                        <button class="stage-pill" data-stage="Contacted" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--orange)"></span>Contacted</button>
+                        <button class="stage-pill" data-stage="Qualified" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--purple)"></span>Qualified</button>
+                        <button class="stage-pill" data-stage="Proposal" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--navy-deep)"></span>Proposal</button>
+                        <button class="stage-pill" data-stage="Won" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--green)"></span>Won</button>
+                        <button class="stage-pill" data-stage="Lost" onclick="toggleStagePill(this)"><span class="sdot" style="background:var(--red)"></span>Lost</button>
+                    </div>
+                </div>
+                <div class="filters-row">
+                    <div class="filter-group">
+                        <span class="filter-label">Score</span>
+                        <button class="score-toggle" data-score="hot" onclick="toggleScore(this)">🔥 Hot</button>
+                        <button class="score-toggle" data-score="warm" onclick="toggleScore(this)">🟠 Warm</button>
+                        <button class="score-toggle" data-score="cold" onclick="toggleScore(this)">🔵 Cold</button>
+                    </div>
+                    <div class="filter-group" style="margin-left:auto">
+                        <span class="filter-label">City</span>
+                        <input type="text" class="filter-input" id="filterCity" placeholder="e.g. Mumbai" oninput="debounceSearch()" style="width:140px;border-radius:10px;">
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Leads Table ── -->
+            <div class="card leads-card animate-fade-in-up" style="animation-delay:0.1s;">
+                <div class="card-header">
+                    <h2 style="display:flex;align-items:center;gap:8px;"><i class="fas fa-users" style="color:var(--accent)"></i> All Leads</h2>
+                    <span class="lead-count-badge" id="leadCount">Loading…</span>
+                </div>
+                <div class="leads-table-wrap" style="overflow-x:auto">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th><input type="checkbox" class="row-checkbox" id="selectAll" onchange="toggleSelectAll(this)"></th>
+                                <th>Date</th>
+                                <th>Name</th>
+                                <th>Mobile</th>
+                                <th>Product</th>
+                                <th>City</th>
+                                <th>Score</th>
+                                <th>Stage</th>
+                                <th>Type</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody id="leadsTableBody">
+                            <tr class="skeleton-row"><td colspan="10"><div class="skeleton" style="height:48px;margin:4px 0"></div></td></tr>
+                            <tr class="skeleton-row"><td colspan="10"><div class="skeleton" style="height:48px;margin:4px 0"></div></td></tr>
+                            <tr class="skeleton-row"><td colspan="10"><div class="skeleton" style="height:48px;margin:4px 0"></div></td></tr>
+                            <tr class="skeleton-row"><td colspan="10"><div class="skeleton" style="height:48px;margin:4px 0"></div></td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="pagination" id="pagination" style="display:none">
+                    <div class="pagination-info" id="paginationInfo">Showing 1–20 of 0</div>
+                    <div class="pagination-btns" id="paginationBtns"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── BULK ACTION BAR ── -->
+    <div class="bulk-bar" id="bulkBar">
+        <span class="bulk-count" id="bulkCount">0 selected</span>
+        <div class="bulk-divider"></div>
+        <select class="bulk-stage-select" id="bulkStageSelect" onchange="bulkChangeStage()">
+            <option value="">Change Stage…</option>
+            <option value="New">New</option>
+            <option value="Contacted">Contacted</option>
+            <option value="Qualified">Qualified</option>
+            <option value="Proposal">Proposal</option>
+            <option value="Won">Won</option>
+            <option value="Lost">Lost</option>
+        </select>
+        <button class="bulk-btn bulk-btn-primary" onclick="exportSelected()"><i class="fas fa-download"></i> Export</button>
+        <button class="bulk-btn bulk-btn-danger" onclick="deleteSelected()"><i class="fas fa-trash"></i> Delete</button>
+        <div class="bulk-divider"></div>
+        <button class="bulk-btn bulk-btn-ghost" onclick="deselectAll()"><i class="fas fa-times"></i> Deselect</button>
+    </div>
+
+    <!-- ── DETAIL PANEL ── -->
+    <div class="slide-overlay" id="detailOverlay" onclick="closePanel()"></div>
+    <div class="slide-panel" id="detailPanel">
+        <div class="panel-header">
+            <div class="detail-panel-header" style="flex:1">
+                <div class="panel-header-info">
+                    <div class="panel-name" id="panelName">Lead Details</div>
+                    <div class="panel-company" id="panelCompany"></div>
+                    <span class="badge-stage" id="panelStageBadge"></span>
+                </div>
+            </div>
+            <button class="panel-close" onclick="closePanel()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="panel-body" id="panelBody"></div>
+    </div>
+
+    <div id="notifContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+    // ── Init layout ──
+    document.getElementById('sidebarContainer').innerHTML = generateSidebar('leads');
+    document.getElementById('topbarContainer').innerHTML = generateTopbar('Leads', `
+        <button class="btn btn-outline btn-sm" onclick="exportLeads()"><i class="fas fa-download"></i> Export</button>
+        <button class="btn btn-primary btn-sm" onclick="syncLeads()"><i class="fas fa-sync-alt"></i> Sync</button>
+    `);
+    document.getElementById('notifContainer').innerHTML = generateNotifPanel();
+
+    // ── State ──
+    let currentPage = 1;
+    const perPage = 20;
+    let searchTimer = null;
+    let allLeads = [];
+    let totalLeads = 0;
+    let selectedIds = new Set();
+    let currentLeadId = null;
+    let currentLeadIdx = null;
+    const activeStages = new Set();
+    let activeScore = '';
+
+    const STAGE_CLASSES = { New:'new', Contacted:'contacted', Qualified:'qualified', Proposal:'proposal', Negotiation:'negotiation', Won:'won', Lost:'lost' };
+
+    function cleanPhone(p) { return (p||'').replace(/[^\d]/g,''); }
+
+    // ── Filters ──
+    function toggleStagePill(btn) {
+        const stage = btn.dataset.stage;
+        btn.classList.toggle('active');
+        if (btn.classList.contains('active')) activeStages.add(stage); else activeStages.delete(stage);
+        currentPage = 1; loadLeads();
+    }
+    function toggleScore(btn) {
+        const score = btn.dataset.score;
+        const isActive = btn.classList.contains(`active-${score}`);
+        document.querySelectorAll('.score-toggle').forEach(b => b.className = 'score-toggle');
+        if (!isActive) { btn.classList.add(`active-${score}`); activeScore = score; }
+        else activeScore = '';
+        currentPage = 1; loadLeads();
+    }
+    function debounceSearch() { clearTimeout(searchTimer); searchTimer = setTimeout(() => { currentPage = 1; loadLeads(); }, 320); }
+    function applyFilters() { currentPage = 1; loadLeads(); }
+    function clearFilters() {
+        document.getElementById('searchInput').value = '';
+        document.getElementById('filterDateFrom').value = '';
+        document.getElementById('filterDateTo').value = '';
+        document.getElementById('filterCity').value = '';
+        document.querySelectorAll('.stage-pill').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('.score-toggle').forEach(b => b.className = 'score-toggle');
+        activeStages.clear(); activeScore = '';
+        currentPage = 1; loadLeads();
+    }
+
+    // ── Load Leads ──
+    async function loadLeads() {
+        const search = document.getElementById('searchInput').value.trim();
+        const city = document.getElementById('filterCity').value.trim();
+        const dateFrom = document.getElementById('filterDateFrom').value;
+        const dateTo = document.getElementById('filterDateTo').value;
+
+        let url = `/api/leads?page=${currentPage}&per_page=${perPage}`;
+        if (search) url += `&search=${encodeURIComponent(search)}`;
+        if (city) url += `&city=${encodeURIComponent(city)}`;
+        if (activeScore) url += `&score=${activeScore}`;
+        if (activeStages.size > 0) url += `&stage=${encodeURIComponent([...activeStages].join(','))}`;
+        if (dateFrom) url += `&from=${dateFrom}`;
+        if (dateTo) url += `&to=${dateTo}`;
+
+        try {
+            const [res, statsRes] = await Promise.all([
+                apiCall('GET', url),
+                apiCall('GET', '/api/leads/stats')
+            ]);
+            if (!res) return;
+            const data = await res.json();
+            const stats = statsRes ? await statsRes.json() : null;
+            allLeads = data.leads || data.data || (Array.isArray(data) ? data : []);
+            totalLeads = data.total || data.count || (stats && stats.total) || allLeads.length;
+            document.getElementById('leadCount').textContent = `${totalLeads.toLocaleString('en-IN')} leads`;
+            renderTable(allLeads);
+            renderPagination(totalLeads);
+        } catch(e) {
+            document.getElementById('leadsTableBody').innerHTML = `
+                <tr><td colspan="10"><div class="empty-state"><i class="fas fa-exclamation-triangle"></i><p>Failed to load leads</p></div></td></tr>`;
+        }
+    }
+
+    function getScoreBadgeCustom(score) {
+        const s = Number(score) || 0;
+        if (s >= 70) return '<span class="badge-score hot">🔥 ' + s + '</span>';
+        if (s >= 40) return '<span class="badge-score warm">🟠 ' + s + '</span>';
+        return '<span class="badge-score cold">🔵 ' + s + '</span>';
+    }
+
+    function renderTable(leads) {
+        const tbody = document.getElementById('leadsTableBody');
+        if (!leads.length) {
+            tbody.innerHTML = `<tr><td colspan="10">
+                <div class="leads-empty">
+                    <div class="emoji-illustration">📭</div>
+                    <h3>No leads yet</h3>
+                    <p>Click <strong>Sync</strong> to fetch leads from IndiaMART, or adjust your filters.</p>
+                </div>
+            </td></tr>`;
+            return;
+        }
+        tbody.innerHTML = leads.map((l, i) => {
+            const id = l._id || l.id || i;
+            const name = escapeHtml(l.sender_name || l.name || l.SENDERNAME || '—');
+            const mobile = l.sender_mobile || l.mobile || l.SENDERMOBILE || '—';
+            const product = l.query_product_name || l.product || l.SUBJECT || '—';
+            const city = l.sender_city || l.city || l.SENDERCITY || '—';
+            const score = l.lead_score || l.score || l.leadScore || 50;
+            const type = l.query_type || l.type || l.CATTYPE || 'buylead';
+            const date = l.query_time || l.createdAt || l.QUERY_TIME || l.date || '';
+            const stage = l.lead_stage || l.pipelineStage || l.stage || 'New';
+            const isStarred = l.is_starred || l.starred || l.isStarred || false;
+            const isRead = l.is_read !== false && l.read !== false && l.isRead !== false;
+            const isSelected = selectedIds.has(String(id));
+            const stageCls = STAGE_CLASSES[stage] || 'new';
+
+            return `<tr onclick="openPanel('${id}', ${i})" id="row-${id}" style="animation:fadeInUp 0.3s ease both;animation-delay:${Math.min(i*0.03, 0.3)}s">
+                <td onclick="event.stopPropagation()">
+                    <input type="checkbox" class="row-checkbox" data-id="${id}" ${isSelected ? 'checked' : ''} onchange="toggleSelect(this)">
+                </td>
+                <td data-label="Date">${formatDate(date)}</td>
+                <td>
+                    <div class="lead-name-cell ${!isRead ? 'unread' : ''}">${name}</div>
+                    <div class="lead-sub">${escapeHtml(l.sender_email || l.email || l.SENDEREMAIL || '')}</div>
+                </td>
+                <td data-label="Mobile"><a href="tel:${mobile}" onclick="event.stopPropagation()" style="color:var(--text-primary);text-decoration:none;">${escapeHtml(mobile)}</a></td>
+                <td class="lead-product" title="${escapeHtml(product)}">${escapeHtml(product)}</td>
+                <td>${escapeHtml(city)}</td>
+                <td>${getScoreBadgeCustom(score)}</td>
+                <td><span class="badge-stage ${stageCls}">${escapeHtml(stage)}</span></td>
+                <td>${getTypeBadge(type)}</td>
+                <td onclick="event.stopPropagation()">
+                    <div class="action-btns">
+                        <button class="star-btn ${isStarred ? 'starred' : ''}" onclick="toggleStar('${id}', this)" title="Star"><i class="fas fa-star"></i></button>
+                        <a class="action-btn" title="Call" href="tel:${mobile}"><i class="fas fa-phone"></i></a>
+                        <a class="action-btn" title="WhatsApp" href="https://wa.me/91${cleanPhone(mobile)}" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </td>
+            </tr>`;
+        }).join('');
+
+        const selectAll = document.getElementById('selectAll');
+        if (selectAll) selectAll.checked = leads.length > 0 && leads.every(l => selectedIds.has(String(l._id || l.id)));
+    }
+
+    function renderPagination(total) {
+        const pg = document.getElementById('pagination');
+        const totalPages = Math.ceil(total / perPage);
+        if (totalPages <= 1) { pg.style.display = 'none'; return; }
+        pg.style.display = 'flex';
+
+        const start = (currentPage - 1) * perPage + 1;
+        const end = Math.min(currentPage * perPage, total);
+        document.getElementById('paginationInfo').textContent = `Showing ${start}–${end} of ${total.toLocaleString('en-IN')}`;
+
+        let btns = `<button class="page-btn" onclick="goPage(${currentPage-1})" ${currentPage===1?'disabled':''}><i class="fas fa-chevron-left"></i></button>`;
+        let pages = [];
+        if (totalPages <= 7) { for (let i=1;i<=totalPages;i++) pages.push(i); }
+        else {
+            pages = [1];
+            if (currentPage > 3) pages.push('...');
+            for (let i=Math.max(2,currentPage-1); i<=Math.min(totalPages-1,currentPage+1); i++) pages.push(i);
+            if (currentPage < totalPages-2) pages.push('...');
+            pages.push(totalPages);
+        }
+        pages.forEach(p => {
+            if (p === '...') btns += `<span style="padding:0 6px;color:var(--text-muted)">…</span>`;
+            else btns += `<button class="page-btn ${p===currentPage?'active':''}" onclick="goPage(${p})">${p}</button>`;
+        });
+        btns += `<button class="page-btn" onclick="goPage(${currentPage+1})" ${currentPage===totalPages?'disabled':''}><i class="fas fa-chevron-right"></i></button>`;
+        document.getElementById('paginationBtns').innerHTML = btns;
+    }
+
+    function goPage(p) { currentPage = p; loadLeads(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+
+    // ── Star ──
+    async function toggleStar(id, btn) {
+        const isStarred = btn.classList.contains('starred');
+        btn.classList.toggle('starred');
+        const res = await apiCall('PATCH', `/api/leads/${id}/star`, { starred: !isStarred });
+        if (!res || res.status >= 400) { btn.classList.toggle('starred'); showToast('Failed to update', 'error'); }
+    }
+
+    // ── Bulk Selection ──
+    function toggleSelect(checkbox) {
+        const id = String(checkbox.dataset.id);
+        if (checkbox.checked) selectedIds.add(id); else selectedIds.delete(id);
+        updateBulkBar();
+        const checkboxes = document.querySelectorAll('.row-checkbox[data-id]');
+        document.getElementById('selectAll').checked = checkboxes.length > 0 && [...checkboxes].every(c => c.checked);
+    }
+    function toggleSelectAll(master) {
+        document.querySelectorAll('.row-checkbox[data-id]').forEach(c => {
+            c.checked = master.checked;
+            const id = String(c.dataset.id);
+            if (master.checked) selectedIds.add(id); else selectedIds.delete(id);
+        });
+        updateBulkBar();
+    }
+    function deselectAll() {
+        selectedIds.clear();
+        document.querySelectorAll('.row-checkbox').forEach(c => c.checked = false);
+        updateBulkBar();
+    }
+    function updateBulkBar() {
+        const bar = document.getElementById('bulkBar');
+        document.getElementById('bulkCount').textContent = `${selectedIds.size} selected`;
+        if (selectedIds.size > 0) bar.classList.add('show'); else { bar.classList.remove('show'); document.getElementById('bulkStageSelect').value = ''; }
+    }
+
+    async function bulkChangeStage() {
+        const stage = document.getElementById('bulkStageSelect').value;
+        if (!stage || selectedIds.size === 0) return;
+        showToast(`Updating ${selectedIds.size} leads…`, 'info');
+        const ids = [...selectedIds];
+        await apiCall('PUT', `/api/leads/bulk/stage`, { ids, stage });
+        showToast(`Updated ${ids.length} leads to "${stage}"!`, 'success');
+        document.getElementById('bulkStageSelect').value = '';
+        deselectAll(); loadLeads();
+    }
+
+    function exportSelected() {
+        const ids = [...selectedIds];
+        const rows = allLeads.filter(l => ids.includes(String(l._id || l.id)));
+        if (!rows.length) return showToast('No leads selected', 'error');
+        const headers = ['Name','Company','Mobile','Email','City','State','Product','Score','Stage','Date'];
+        const csvRows = [headers.join(',')];
+        rows.forEach(l => {
+            csvRows.push([l.sender_name||l.name||'',l.sender_company||l.company||'',l.sender_mobile||l.mobile||'',l.sender_email||l.email||'',l.sender_city||l.city||'',l.state||'',
+                (l.query_product_name||l.product||'').replace(/,/g,';'),l.lead_score||l.score||50,l.lead_stage||l.stage||'new',formatDate(l.createdAt||l.date)
+            ].map(v => `"${String(v).replace(/"/g,'""')}"`).join(','));
+        });
+        const blob = new Blob([csvRows.join('\n')], { type:'text/csv' });
+        const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+        a.download = `leads-export-${new Date().toISOString().slice(0,10)}.csv`;
+        a.click(); URL.revokeObjectURL(a.href);
+        showToast(`Exported ${rows.length} leads`, 'success');
+    }
+
+    async function deleteSelected() {
+        const ids = [...selectedIds];
+        if (!ids.length) return;
+        if (!confirm(`Delete ${ids.length} selected lead(s)? This cannot be undone.`)) return;
+        showToast(`Deleting ${ids.length} leads…`, 'info');
+        await Promise.all(ids.map(id => apiCall('DELETE', `/api/leads/bulk/delete`, { ids })));
+        showToast(`Deleted ${ids.length} leads`, 'success');
+        deselectAll(); loadLeads();
+    }
+
+    // ── Detail Panel ──
+    function openPanel(id, idx) {
+        currentLeadId = id;
+        currentLeadIdx = idx;
+        const l = allLeads[idx] || {};
+        const name = l.sender_name || l.name || l.SENDERNAME || 'Lead';
+        const company = l.sender_company || l.company || '';
+        const stage = l.lead_stage || l.pipelineStage || l.stage || 'New';
+        const mobile = l.sender_mobile || l.mobile || '';
+        const email = l.sender_email || l.email || '';
+        const city = l.sender_city || l.city || '';
+        const state = l.state || l.SENDERSTATE || '';
+        const product = l.query_product_name || l.product || '';
+        const message = l.message || l.ENQ_MESSAGE || '';
+        const dealValue = l.dealValue || l.deal_value || 0;
+        const clean = cleanPhone(mobile);
+        const stageCls = STAGE_CLASSES[stage] || 'new';
+
+        document.getElementById('panelName').textContent = name;
+        document.getElementById('panelCompany').textContent = company;
+        const badge = document.getElementById('panelStageBadge');
+        badge.className = `badge-stage ${stageCls}`;
+        badge.textContent = stage;
+
+        document.getElementById('panelBody').innerHTML = `
+            <div class="panel-section">
+                <div class="section-title"><i class="fas fa-address-card"></i> Contact</div>
+                <div class="contact-grid">
+                    ${mobile ? `<div class="contact-row"><div class="contact-icon phone"><i class="fas fa-phone"></i></div><div class="contact-info"><div class="contact-label">Phone</div><div class="contact-value"><a href="tel:${escapeHtml(mobile)}">${escapeHtml(mobile)}</a></div></div></div>` : ''}
+                    ${email ? `<div class="contact-row"><div class="contact-icon email"><i class="fas fa-envelope"></i></div><div class="contact-info"><div class="contact-label">Email</div><div class="contact-value"><a href="mailto:${escapeHtml(email)}">${escapeHtml(email)}</a></div></div></div>` : ''}
+                    ${clean ? `<div class="contact-row"><div class="contact-icon whatsapp"><i class="fab fa-whatsapp"></i></div><div class="contact-info"><div class="contact-label">WhatsApp</div><div class="contact-value"><a href="https://wa.me/91${clean}" target="_blank">Open WhatsApp</a></div></div></div>` : ''}
+                    ${(city||state) ? `<div class="contact-row"><div class="contact-icon location"><i class="fas fa-map-marker-alt"></i></div><div class="contact-info"><div class="contact-label">Location</div><div class="contact-value">${escapeHtml([city,state].filter(Boolean).join(', '))}</div></div></div>` : ''}
+                    ${product ? `<div class="contact-row"><div class="contact-icon" style="background:rgba(253,126,20,0.1);color:var(--orange)"><i class="fas fa-tag"></i></div><div class="contact-info"><div class="contact-label">Product</div><div class="contact-value">${escapeHtml(product)}</div></div></div>` : ''}
+                    ${message ? `<div class="contact-row"><div class="contact-icon" style="background:rgba(108,117,125,0.1);color:var(--text-tertiary)"><i class="fas fa-comment"></i></div><div class="contact-info"><div class="contact-label">Message</div><div class="contact-value" style="font-size:12px;line-height:1.5">${escapeHtml(message)}</div></div></div>` : ''}
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="section-title"><i class="fas fa-brain"></i> AI Insights</div>
+                <div class="ai-insights-card" id="aiInsightsCard">
+                    <div class="ai-card-header"><i class="fas fa-robot"></i><span class="ai-card-title">Analyzing…</span></div>
+                    <div style="color:var(--text-muted);font-size:13px;padding:8px 0"><i class="fas fa-spinner fa-spin"></i> Loading AI insights…</div>
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="section-title"><i class="fas fa-layer-group"></i> Pipeline Stage</div>
+                <div style="display:flex;gap:10px">
+                    <select class="stage-select" id="panelStageSelect">
+                        ${['New','Contacted','Qualified','Proposal','Won','Lost'].map(s => `<option value="${s}" ${stage===s?'selected':''}>${s}</option>`).join('')}
+                    </select>
+                    <button class="btn btn-primary btn-sm" onclick="updatePanelStage()">Save</button>
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="section-title"><i class="fas fa-rupee-sign"></i> Deal Value</div>
+                <div style="display:flex;gap:10px;align-items:center">
+                    <span style="font-size:18px;color:var(--text-tertiary);font-weight:700">₹</span>
+                    <input type="number" class="deal-input" id="panelDealValue" value="${dealValue||''}" placeholder="0" min="0">
+                    <button class="btn btn-primary btn-sm" onclick="saveDealValue()">Save</button>
+                </div>
+            </div>
+            <div class="panel-section">
+                <div class="section-title"><i class="fas fa-stream"></i> Activity</div>
+                <div class="add-activity-form">
+                    <div style="display:flex;gap:8px;margin-bottom:8px">
+                        <select class="activity-type-select" id="activityTypeSelect">
+                            <option value="note" selected>📝 Note</option>
+                            <option value="call">📞 Call</option>
+                            <option value="email">📧 Email</option>
+                            <option value="whatsapp">💬 WhatsApp</option>
+                            <option value="meeting">🤝 Meeting</option>
+                        </select>
+                    </div>
+                    <div style="display:flex;gap:8px">
+                        <textarea class="activity-text-input" id="activityTextInput" rows="2" placeholder="Add activity note…" style="width:100%"></textarea>
+                    </div>
+                    <button class="btn btn-primary btn-sm" onclick="addActivity()" style="width:100%;justify-content:center;margin-top:8px"><i class="fas fa-plus"></i> Add</button>
+                </div>
+                <div class="timeline" id="activityTimeline">
+                    <div style="color:var(--text-muted);font-size:13px;padding:8px 0"><i class="fas fa-spinner fa-spin"></i> Loading…</div>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('detailPanel').classList.add('open');
+        document.getElementById('detailOverlay').classList.add('show');
+        apiCall('PATCH', `/api/leads/${id}`, { read: true }).catch(()=>{});
+        loadAiInsights(id);
+        loadActivityTimeline(id);
+    }
+
+    function closePanel() {
+        document.getElementById('detailPanel').classList.remove('open');
+        document.getElementById('detailOverlay').classList.remove('show');
+        currentLeadId = null; currentLeadIdx = null;
+    }
+
+    async function updatePanelStage() {
+        if (!currentLeadId) return;
+        const stage = document.getElementById('panelStageSelect').value;
+        const res = await apiCall('PUT', `/api/leads/${currentLeadId}/stage`, { stage });
+        if (res && res.status < 400) {
+            showToast(`Stage → "${stage}"`, 'success');
+            const badge = document.getElementById('panelStageBadge');
+            badge.className = `badge-stage ${STAGE_CLASSES[stage]||'new'}`;
+            badge.textContent = stage;
+            if (currentLeadIdx !== null && allLeads[currentLeadIdx]) { allLeads[currentLeadIdx].lead_stage = stage; allLeads[currentLeadIdx].stage = stage; }
+            loadLeads();
+        } else showToast('Failed to update stage', 'error');
+    }
+
+    async function saveDealValue() {
+        if (!currentLeadId) return;
+        const val = document.getElementById('panelDealValue').value;
+        const res = await apiCall('PUT', `/api/leads/${currentLeadId}/deal-value`, { dealValue: Number(val) });
+        if (res && res.status < 400) showToast(`Deal value: ${formatCurrency(Number(val))}`, 'success');
+        else showToast('Failed to save', 'error');
+    }
+
+    async function loadAiInsights(id) {
+        const card = document.getElementById('aiInsightsCard');
+        if (!card) return;
+        try {
+            const res = await apiCall('GET', `/api/leads/${id}/ai-insights`);
+            if (!res || !res.ok) throw new Error();
+            const d = await res.json();
+            const intent = d.buyingIntent || d.buying_intent || 0;
+            const urgency = d.urgency || 'medium';
+            const personality = d.personalityType || d.personality_type || '';
+            const tips = d.negotiationTips || d.negotiation_tips || [];
+            const cls = intent >= 70 ? 'high' : intent >= 40 ? 'mid' : 'low';
+            const urgCls = urgency === 'high' ? 'urgency-high' : urgency === 'low' ? 'urgency-low' : 'urgency-medium';
+            const urgLabel = urgency === 'high' ? '🔴 High Urgency' : urgency === 'low' ? '🟢 Low Urgency' : '🟡 Medium Urgency';
+
+            card.innerHTML = `
+                <div class="ai-card-header"><i class="fas fa-robot"></i><span class="ai-card-title">AI Insights</span><span style="margin-left:auto;font-size:10px;color:var(--text-muted)">Powered by AI</span></div>
+                <div class="intent-bar-wrap">
+                    <div class="intent-label"><span class="intent-text">Buying Intent</span><span class="intent-score ${cls}">${intent}/100</span></div>
+                    <div class="intent-bar-bg"><div class="intent-bar-fill ${cls}" style="width:0%" id="intentBarFill"></div></div>
+                </div>
+                <div class="ai-tags">
+                    <span class="ai-tag ${urgCls}">${urgLabel}</span>
+                    ${personality ? `<span class="ai-tag personality"><i class="fas fa-user-tag" style="margin-right:4px"></i>${escapeHtml(personality)}</span>` : ''}
+                </div>
+                ${tips.length ? `<div style="margin-top:8px"><div style="font-size:11px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.4px;margin-bottom:6px">💡 Tips</div>${tips.slice(0,4).map(t => `<div class="tip-item"><i class="fas fa-chevron-right"></i><span>${escapeHtml(t)}</span></div>`).join('')}</div>` : ''}
+            `;
+            setTimeout(() => { const fill = document.getElementById('intentBarFill'); if (fill) fill.style.width = intent + '%'; }, 100);
+        } catch(e) {
+            card.innerHTML = `<div class="ai-card-header"><i class="fas fa-robot"></i><span class="ai-card-title">AI Insights</span></div>
+                <div style="color:var(--text-muted);font-size:12px;padding:8px 0"><i class="fas fa-info-circle"></i> Not available yet. <button class="btn btn-outline btn-sm" onclick="loadAiInsights('${id}')" style="margin-left:6px"><i class="fas fa-redo"></i> Retry</button></div>`;
+        }
+    }
+
+    async function loadActivityTimeline(id) {
+        const tl = document.getElementById('activityTimeline');
+        if (!tl) return;
+        try {
+            const res = await apiCall('GET', `/api/leads/${id}/activities`);
+            if (!res || !res.ok) throw new Error();
+            const data = await res.json();
+            const activities = data.activities || data.data || (Array.isArray(data) ? data : []);
+            if (!activities.length) { tl.innerHTML = `<div style="color:var(--text-muted);font-size:13px;text-align:center;padding:16px 0"><i class="fas fa-stream" style="display:block;font-size:28px;opacity:0.3;margin-bottom:8px"></i>No activities yet</div>`; return; }
+            tl.innerHTML = activities.map((a, i) => {
+                const type = a.type || a.activity_type || 'note';
+                const content = a.content || a.note || a.text || '';
+                const time = a.createdAt || a.created_at || '';
+                return `<div class="timeline-item"><div class="timeline-dot-wrap"><div class="timeline-dot ${type}"></div>${i < activities.length-1 ? '<div class="timeline-line"></div>' : ''}</div><div class="timeline-content"><div class="timeline-type">${escapeHtml(type)}</div><div class="timeline-text">${escapeHtml(content)}</div><div class="timeline-time">${timeAgo(time)} · ${formatDate(time)}</div></div></div>`;
+            }).join('');
+        } catch(e) { tl.innerHTML = `<div style="color:var(--text-muted);font-size:13px;padding:8px 0">No activities yet</div>`; }
+    }
+
+    async function addActivity() {
+        if (!currentLeadId) return;
+        const type = document.getElementById('activityTypeSelect').value;
+        const content = (document.getElementById('activityTextInput').value || '').trim();
+        if (!content) return showToast('Enter activity details', 'error');
+        const res = await apiCall('POST', `/api/leads/${currentLeadId}/activities`, { type, content });
+        if (res && res.status < 400) { showToast('Activity added!', 'success'); document.getElementById('activityTextInput').value = ''; loadActivityTimeline(currentLeadId); }
+        else showToast('Failed', 'error');
+    }
+
+    // ── Sync & Export ──
+    async function syncLeads() {
+        showToast('Syncing leads…', 'info');
+        try {
+            const res = await apiCall('POST', '/api/leads/sync');
+            if (!res) return;
+            const data = await res.json();
+            showToast(`Synced ${data.count || 0} new leads`, 'success');
+            loadLeads();
+        } catch(e) { showToast('Sync failed', 'error'); }
+    }
+
+    async function exportLeads() {
+        try {
+            const res = await apiCall('GET', '/api/leads/export');
+            if (!res) return;
+            const blob = await res.blob();
+            const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+            a.download = `leads-${new Date().toISOString().slice(0,10)}.csv`;
+            a.click(); URL.revokeObjectURL(a.href);
+            showToast('Export downloaded', 'success');
+        } catch(e) { showToast('Export failed', 'error'); }
+    }
+
+    // ── Keyboard ──
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') closePanel(); });
+
+    // ── Init ──
+    if (authGuard()) {
+        initLeadFlow();
+        loadLeads();
+    }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Product Catalog — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <style>
+        /* ─── Layout ──────────────────────────────────────────────── */
+        .main { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
+        .content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+        /* ─── Page Header ─────────────────────────────────────────── */
+        .catalog-header {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+        }
+        .catalog-header-left { display: flex; flex-direction: column; gap: 4px; }
+        .catalog-header-left h2 {
+            font-size: 26px; font-weight: 900; color: var(--text-primary);
+            background: var(--gradient-neon); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+        }
+        .catalog-header-left p { font-size: 13px; color: var(--text-tertiary); font-weight: 500; }
+        .product-count-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: rgba(var(--accent-rgb), 0.08); color: var(--accent);
+            font-size: 12px; font-weight: 700; padding: 4px 12px;
+            border-radius: var(--radius-full); border: 1px solid rgba(var(--accent-rgb), 0.15);
+        }
+
+        /* ─── Search Bar (Animated Expand) ────────────────────────── */
+        .search-container { position: relative; }
+        .search-bar {
+            display: flex; align-items: center; gap: 10px;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border: 1.5px solid var(--glass-border); border-radius: var(--radius-full);
+            padding: 10px 18px; width: 52px; overflow: hidden;
+            transition: width 0.4s var(--ease-spring), border-color 0.3s, box-shadow 0.3s;
+            cursor: pointer;
+        }
+        .search-bar.expanded, .search-bar:focus-within {
+            width: 320px; border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1), var(--shadow-md);
+        }
+        .search-bar i.search-icon {
+            font-size: 16px; color: var(--text-muted); flex-shrink: 0;
+            transition: color 0.3s;
+        }
+        .search-bar:focus-within i.search-icon { color: var(--accent); }
+        .search-bar input {
+            border: none; background: transparent; outline: none; width: 100%;
+            font-family: 'Inter'; font-size: 14px; color: var(--text-primary);
+            opacity: 0; transition: opacity 0.2s 0.1s;
+        }
+        .search-bar.expanded input, .search-bar:focus-within input { opacity: 1; }
+        .search-clear {
+            position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+            background: none; border: none; color: var(--text-muted); cursor: pointer;
+            font-size: 12px; opacity: 0; transition: opacity 0.2s; padding: 4px;
+        }
+        .search-clear.visible { opacity: 1; }
+        .search-clear:hover { color: var(--accent); }
+
+        /* ─── Toolbar Row ─────────────────────────────────────────── */
+        .catalog-toolbar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 24px; flex-wrap: wrap; gap: 14px;
+        }
+        .toolbar-left { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+        .toolbar-right { display: flex; align-items: center; gap: 12px; }
+
+        /* ─── Category Filter Pills ───────────────────────────────── */
+        .filter-pills {
+            display: flex; gap: 6px; padding: 5px;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border); border-radius: var(--radius-full);
+        }
+        .pill-btn {
+            padding: 8px 20px; border-radius: var(--radius-full); border: none;
+            background: transparent; font-size: 13px; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; position: relative;
+            transition: color 0.3s, transform 0.2s; white-space: nowrap;
+        }
+        .pill-btn::before {
+            content: ''; position: absolute; inset: 0; border-radius: var(--radius-full);
+            background: var(--gradient-accent); opacity: 0;
+            transition: opacity 0.35s var(--ease-out), transform 0.35s var(--ease-spring);
+            transform: scale(0.85); z-index: -1;
+        }
+        .pill-btn.active { color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.2); }
+        .pill-btn.active::before {
+            opacity: 1; transform: scale(1);
+            box-shadow: 0 4px 14px rgba(var(--accent-rgb), 0.35);
+        }
+        .pill-btn:not(.active):hover { color: var(--accent); transform: translateY(-1px); }
+        .pill-btn .pill-count {
+            display: inline-flex; align-items: center; justify-content: center;
+            min-width: 18px; height: 18px; font-size: 10px; font-weight: 700;
+            border-radius: var(--radius-full); margin-left: 6px; padding: 0 5px;
+            background: rgba(var(--accent-rgb), 0.12); color: var(--accent);
+            transition: background 0.3s, color 0.3s;
+        }
+        .pill-btn.active .pill-count { background: rgba(255,255,255,0.25); color: #fff; }
+
+        /* Category pills row */
+        .category-pills {
+            display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 24px;
+            padding-bottom: 4px; overflow-x: auto; scrollbar-width: none;
+        }
+        .category-pills::-webkit-scrollbar { display: none; }
+        .cat-pill {
+            padding: 6px 16px; border-radius: var(--radius-full); border: 1.5px solid var(--border-secondary);
+            background: var(--bg-secondary); font-size: 12px; font-weight: 600;
+            color: var(--text-secondary); cursor: pointer; white-space: nowrap;
+            transition: all 0.3s var(--ease-out); display: flex; align-items: center; gap: 6px;
+        }
+        .cat-pill:hover { border-color: var(--accent); color: var(--accent); transform: translateY(-1px); }
+        .cat-pill.active {
+            background: rgba(var(--accent-rgb), 0.08); border-color: var(--accent);
+            color: var(--accent); box-shadow: 0 2px 8px rgba(var(--accent-rgb), 0.15);
+        }
+        .cat-pill i { font-size: 11px; }
+
+        /* ─── Add Product Button (Ripple) ─────────────────────────── */
+        .btn-add-product {
+            position: relative; overflow: hidden;
+            padding: 11px 28px; border-radius: var(--radius-full); border: none;
+            background: var(--gradient-accent); background-size: 200% 200%;
+            color: #fff; font-size: 14px; font-weight: 700; font-family: 'Inter';
+            cursor: pointer; display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(var(--accent-rgb), 0.3);
+            transition: transform 0.25s var(--ease-spring), box-shadow 0.3s;
+        }
+        .btn-add-product:hover {
+            transform: translateY(-2px) scale(1.02);
+            box-shadow: 0 8px 24px rgba(var(--accent-rgb), 0.4);
+        }
+        .btn-add-product:active { transform: scale(0.97); }
+        .btn-add-product .ripple-effect {
+            position: absolute; border-radius: 50%;
+            background: rgba(255,255,255,0.4);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out forwards;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim {
+            to { transform: scale(4); opacity: 0; }
+        }
+
+        /* ─── View Toggle ─────────────────────────────────────────── */
+        .view-toggle {
+            display: flex; gap: 2px; background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary); border-radius: var(--radius-sm); padding: 3px;
+        }
+        .view-toggle button {
+            padding: 7px 10px; border: none; background: transparent;
+            border-radius: 7px; cursor: pointer; color: var(--text-muted);
+            font-size: 14px; transition: all 0.25s;
+        }
+        .view-toggle button.active {
+            background: var(--bg-secondary); color: var(--accent);
+            box-shadow: var(--shadow-xs);
+        }
+
+        /* ─── Product Grid ────────────────────────────────────────── */
+        .product-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 24px;
+        }
+        .product-grid.list-view {
+            grid-template-columns: 1fr; gap: 12px;
+        }
+
+        /* ─── Glassmorphism Product Card ──────────────────────────── */
+        .product-card {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+            border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+            overflow: hidden; display: flex; flex-direction: column; position: relative;
+            transition: transform 0.4s var(--ease-spring), box-shadow 0.4s var(--ease-out), border-color 0.3s;
+        }
+        .product-card:hover {
+            transform: translateY(-8px);
+            box-shadow: var(--shadow-card-hover);
+            border-color: rgba(var(--accent-rgb), 0.3);
+        }
+
+        /* Card shimmer on hover */
+        .product-card::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(125deg, transparent 30%, rgba(var(--accent-rgb), 0.03) 50%, transparent 70%);
+            opacity: 0; transition: opacity 0.4s; pointer-events: none; z-index: 1;
+        }
+        .product-card:hover::after { opacity: 1; }
+
+        /* Image Area */
+        .product-img-wrapper {
+            height: 180px; position: relative; overflow: hidden;
+            background: linear-gradient(135deg, var(--navy) 0%, var(--navy-deep) 60%, #1a1a2e 100%);
+        }
+        .product-img-wrapper img {
+            width: 100%; height: 100%; object-fit: cover;
+            transition: transform 0.6s var(--ease-out);
+        }
+        .product-card:hover .product-img-wrapper img { transform: scale(1.12); }
+        .product-img-placeholder {
+            width: 100%; height: 100%; display: flex; flex-direction: column;
+            align-items: center; justify-content: center; gap: 8px;
+        }
+        .product-img-placeholder i {
+            font-size: 48px; color: rgba(255,255,255,0.08);
+            transition: transform 0.5s var(--ease-spring), color 0.3s;
+        }
+        .product-card:hover .product-img-placeholder i {
+            transform: scale(1.15) rotate(-5deg); color: rgba(255,255,255,0.15);
+        }
+        .product-img-placeholder span {
+            font-size: 11px; color: rgba(255,255,255,0.15); font-weight: 600;
+            text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Status Badge */
+        .status-badge {
+            position: absolute; top: 12px; right: 12px; z-index: 2;
+            font-size: 10px; font-weight: 700; padding: 5px 12px;
+            border-radius: var(--radius-full); text-transform: uppercase;
+            letter-spacing: 0.6px; backdrop-filter: blur(8px);
+        }
+        .status-badge.active { background: rgba(16,185,129,0.85); color: #fff; }
+        .status-badge.inactive { background: rgba(107,114,128,0.85); color: #fff; }
+
+        /* Category Floating Badge */
+        .category-badge {
+            position: absolute; top: 12px; left: 12px; z-index: 2;
+            font-size: 10px; font-weight: 700; padding: 5px 12px;
+            border-radius: var(--radius-full); text-transform: uppercase;
+            letter-spacing: 0.5px; backdrop-filter: blur(8px);
+            background: rgba(99,102,241,0.85); color: #fff;
+        }
+
+        /* Card Body */
+        .product-body { padding: 20px; flex: 1; display: flex; flex-direction: column; }
+        .product-name {
+            font-size: 16px; font-weight: 800; color: var(--text-primary);
+            margin-bottom: 6px; line-height: 1.35;
+            display: -webkit-box; -webkit-line-clamp: 1;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .product-description {
+            font-size: 13px; color: var(--text-tertiary); line-height: 1.6;
+            margin-bottom: 14px; flex: 1;
+            display: -webkit-box; -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+
+        /* Meta Tags */
+        .product-meta-tags { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 16px; }
+        .meta-tag {
+            display: inline-flex; align-items: center; gap: 4px;
+            padding: 3px 10px; border-radius: var(--radius-full);
+            background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
+            font-size: 11px; font-weight: 600; color: var(--text-tertiary);
+            transition: border-color 0.2s;
+        }
+        .meta-tag i { font-size: 9px; }
+        .meta-tag:hover { border-color: var(--accent); }
+
+        /* Price */
+        .product-price-row {
+            display: flex; align-items: baseline; gap: 6px;
+            margin-bottom: 18px; padding-top: 14px;
+            border-top: 1px solid var(--border-secondary);
+        }
+        .price-amount {
+            font-size: 26px; font-weight: 900;
+            background: var(--gradient-accent); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+            letter-spacing: -0.5px;
+        }
+        .price-unit {
+            font-size: 12px; color: var(--text-muted); font-weight: 500;
+        }
+
+        /* Card Actions */
+        .product-actions {
+            display: grid; grid-template-columns: 1fr auto auto; gap: 8px;
+        }
+        .action-btn {
+            padding: 10px; border-radius: var(--radius-sm); font-size: 13px;
+            font-weight: 600; border: none; cursor: pointer;
+            transition: all 0.25s var(--ease-out);
+            display: flex; align-items: center; justify-content: center; gap: 6px;
+            font-family: 'Inter';
+        }
+        .action-btn.quote {
+            background: rgba(var(--accent-rgb), 0.08); color: var(--accent);
+            border: 1px solid rgba(var(--accent-rgb), 0.15);
+        }
+        .action-btn.quote:hover {
+            background: var(--accent); color: #fff;
+            box-shadow: 0 4px 12px rgba(var(--accent-rgb), 0.3); transform: translateY(-1px);
+        }
+        .action-btn.edit {
+            background: var(--bg-tertiary); color: var(--text-secondary);
+            border: 1px solid var(--border-secondary);
+        }
+        .action-btn.edit:hover {
+            border-color: var(--blue); color: var(--blue);
+            background: rgba(59,130,246,0.06);
+        }
+        .action-btn.delete {
+            background: rgba(239,68,68,0.04); color: var(--text-muted);
+            border: 1px solid rgba(239,68,68,0.1);
+        }
+        .action-btn.delete:hover {
+            background: var(--red); color: #fff;
+            box-shadow: 0 4px 12px rgba(239,68,68,0.3); transform: translateY(-1px);
+        }
+
+        /* ─── List View Card ──────────────────────────────────────── */
+        .product-grid.list-view .product-card {
+            flex-direction: row; height: auto;
+        }
+        .product-grid.list-view .product-img-wrapper {
+            width: 180px; min-width: 180px; height: auto; min-height: 140px;
+        }
+        .product-grid.list-view .product-body { padding: 16px 20px; }
+        .product-grid.list-view .product-price-row { border-top: none; padding-top: 0; margin-bottom: 12px; }
+
+        /* ─── Skeleton Loading ─────────────────────────────────────── */
+        .skeleton-card {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border); border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        .skeleton-img {
+            height: 180px; background: linear-gradient(135deg, var(--bg-tertiary) 0%, var(--border-secondary) 100%);
+            position: relative; overflow: hidden;
+        }
+        .skeleton-body { padding: 20px; }
+        .skeleton-line {
+            height: 14px; border-radius: 7px; background: var(--bg-tertiary);
+            margin-bottom: 10px; position: relative; overflow: hidden;
+        }
+        .skeleton-line.title { width: 70%; height: 18px; }
+        .skeleton-line.desc { width: 100%; }
+        .skeleton-line.desc2 { width: 60%; }
+        .skeleton-line.price { width: 35%; height: 28px; margin-top: 16px; }
+        .skeleton-line.actions { width: 100%; height: 38px; margin-top: 12px; }
+
+        .skeleton-line::after, .skeleton-img::after {
+            content: ''; position: absolute; inset: 0;
+            background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.08) 50%, transparent 100%);
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        /* ─── Empty State ─────────────────────────────────────────── */
+        .empty-state {
+            grid-column: 1 / -1; text-align: center; padding: 80px 20px;
+        }
+        .empty-illustration {
+            width: 200px; height: 200px; margin: 0 auto 28px;
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border); border-radius: 50%;
+            display: flex; align-items: center; justify-content: center;
+            position: relative;
+        }
+        .empty-illustration::before {
+            content: ''; position: absolute; inset: -8px;
+            border: 2px dashed var(--border-secondary); border-radius: 50%;
+            animation: emptyRotate 20s linear infinite;
+        }
+        @keyframes emptyRotate { to { transform: rotate(360deg); } }
+        .empty-illustration i {
+            font-size: 72px;
+            background: var(--gradient-neon); -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent; background-clip: text;
+            opacity: 0.4;
+        }
+        .empty-state h3 {
+            font-size: 22px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px;
+        }
+        .empty-state p {
+            font-size: 14px; color: var(--text-tertiary); margin-bottom: 24px; max-width: 400px; margin-inline: auto;
+        }
+
+        /* ─── Slide-in Modal ──────────────────────────────────────── */
+        .modal-overlay {
+            position: fixed; inset: 0; z-index: 2000;
+            background: rgba(0,0,0,0.5); backdrop-filter: blur(6px);
+            display: flex; align-items: stretch; justify-content: flex-end;
+            opacity: 0; pointer-events: none;
+            transition: opacity 0.35s var(--ease-out);
+        }
+        .modal-overlay.open { opacity: 1; pointer-events: auto; }
+
+        .modal-panel {
+            width: 100%; max-width: 560px; height: 100%;
+            background: var(--bg-secondary); display: flex; flex-direction: column;
+            box-shadow: -8px 0 40px rgba(0,0,0,0.15);
+            transform: translateX(100%);
+            transition: transform 0.45s var(--ease-spring);
+        }
+        .modal-overlay.open .modal-panel { transform: translateX(0); }
+
+        .modal-header {
+            padding: 24px 28px; border-bottom: 1px solid var(--border-primary);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0;
+        }
+        .modal-header-left { display: flex; align-items: center; gap: 12px; }
+        .modal-header-icon {
+            width: 42px; height: 42px; border-radius: var(--radius-sm);
+            background: rgba(var(--accent-rgb), 0.08);
+            display: flex; align-items: center; justify-content: center;
+            color: var(--accent); font-size: 18px;
+        }
+        .modal-header h3 { font-size: 18px; font-weight: 800; color: var(--text-primary); }
+        .modal-header p { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+        .modal-close-btn {
+            width: 36px; height: 36px; border-radius: var(--radius-full);
+            background: var(--bg-tertiary); border: 1px solid var(--border-secondary);
+            color: var(--text-muted); cursor: pointer; font-size: 14px;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s;
+        }
+        .modal-close-btn:hover {
+            background: rgba(var(--accent-rgb), 0.08);
+            border-color: var(--accent); color: var(--accent);
+        }
+
+        .modal-body { padding: 28px; overflow-y: auto; flex: 1; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+        .form-group { display: flex; flex-direction: column; gap: 7px; }
+        .form-group.full { grid-column: 1 / -1; }
+        .form-group label {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            color: var(--text-secondary); letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        .form-group label .required { color: var(--accent); }
+        .form-group input, .form-group select, .form-group textarea {
+            padding: 12px 16px; border: 1.5px solid var(--border-input);
+            border-radius: var(--radius-sm); background: var(--bg-input);
+            color: var(--text-primary); font-family: 'Inter'; font-size: 14px;
+            outline: none; transition: border-color 0.25s, box-shadow 0.25s;
+        }
+        .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(var(--accent-rgb), 0.1);
+        }
+        .form-group textarea { resize: vertical; min-height: 80px; }
+
+        /* Image URL Preview */
+        .img-preview-row { display: flex; align-items: center; gap: 12px; }
+        .img-preview-row input { flex: 1; }
+        .img-preview-thumb {
+            width: 44px; height: 44px; border-radius: var(--radius-sm);
+            border: 1px solid var(--border-secondary); overflow: hidden;
+            flex-shrink: 0; display: flex; align-items: center; justify-content: center;
+            background: var(--bg-tertiary);
+        }
+        .img-preview-thumb img { width: 100%; height: 100%; object-fit: cover; }
+        .img-preview-thumb i { color: var(--text-muted); font-size: 16px; }
+
+        .modal-footer {
+            padding: 20px 28px; border-top: 1px solid var(--border-primary);
+            display: flex; justify-content: space-between; align-items: center;
+            flex-shrink: 0; background: var(--bg-tertiary);
+        }
+        .modal-footer-left { font-size: 12px; color: var(--text-muted); }
+        .modal-footer-right { display: flex; gap: 10px; }
+
+        /* ─── Delete Confirm Modal ────────────────────────────────── */
+        .confirm-overlay {
+            position: fixed; inset: 0; z-index: 3000;
+            background: rgba(0,0,0,0.6); backdrop-filter: blur(8px);
+            display: flex; align-items: center; justify-content: center;
+            opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        }
+        .confirm-overlay.open { opacity: 1; pointer-events: auto; }
+        .confirm-card {
+            background: var(--bg-secondary); border-radius: var(--radius-lg);
+            padding: 32px; width: 400px; max-width: 90vw; text-align: center;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.9) translateY(20px); opacity: 0;
+            transition: all 0.35s var(--ease-spring);
+        }
+        .confirm-overlay.open .confirm-card { transform: scale(1) translateY(0); opacity: 1; }
+        .confirm-icon {
+            width: 64px; height: 64px; border-radius: 50%; margin: 0 auto 20px;
+            background: rgba(239,68,68,0.08); display: flex; align-items: center;
+            justify-content: center; font-size: 28px; color: var(--red);
+        }
+        .confirm-card h3 { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; }
+        .confirm-card p { font-size: 14px; color: var(--text-tertiary); margin-bottom: 24px; line-height: 1.5; }
+        .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+        /* ─── Stats Bar ───────────────────────────────────────────── */
+        .stats-bar {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+            gap: 16px; margin-bottom: 24px;
+        }
+        .stat-card {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border); border-radius: var(--radius);
+            padding: 16px 20px; display: flex; align-items: center; gap: 14px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .stat-card:hover {
+            border-color: rgba(var(--accent-rgb), 0.2);
+            box-shadow: var(--shadow-md);
+        }
+        .stat-icon {
+            width: 44px; height: 44px; border-radius: var(--radius-sm);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 18px; flex-shrink: 0;
+        }
+        .stat-icon.total { background: rgba(var(--accent-rgb), 0.1); color: var(--accent); }
+        .stat-icon.active { background: rgba(16,185,129,0.1); color: var(--green); }
+        .stat-icon.inactive { background: rgba(107,114,128,0.1); color: var(--text-muted); }
+        .stat-icon.value { background: rgba(99,102,241,0.1); color: #6366f1; }
+        .stat-info { display: flex; flex-direction: column; }
+        .stat-value { font-size: 22px; font-weight: 800; color: var(--text-primary); }
+        .stat-label { font-size: 12px; color: var(--text-tertiary); font-weight: 500; }
+
+        /* ─── Animations ──────────────────────────────────────────── */
+        .fade-in-up {
+            animation: fadeInUp 0.5s var(--ease-out) both;
+        }
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .stagger-1 { animation-delay: 0.05s; }
+        .stagger-2 { animation-delay: 0.1s; }
+        .stagger-3 { animation-delay: 0.15s; }
+        .stagger-4 { animation-delay: 0.2s; }
+
+        /* ─── Responsive ──────────────────────────────────────────── */
+        @media (max-width: 768px) {
+            .main { margin-left: 0; }
+            .content { padding: 20px 16px; }
+            .catalog-header { flex-direction: column; align-items: stretch; }
+            .catalog-toolbar { flex-direction: column; align-items: stretch; }
+            .toolbar-left, .toolbar-right { width: 100%; }
+            .filter-pills { overflow-x: auto; }
+            .search-bar, .search-bar.expanded, .search-bar:focus-within { width: 100%; }
+            .product-grid { grid-template-columns: 1fr; }
+            .product-grid.list-view .product-card { flex-direction: column; }
+            .product-grid.list-view .product-img-wrapper { width: 100%; min-height: 140px; }
+            .form-grid { grid-template-columns: 1fr; }
+            .form-group.full { grid-column: 1; }
+            .modal-panel { max-width: 100%; }
+            .stats-bar { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+    <div class="main">
+        <div id="topbarContainer"></div>
+        <div class="content">
+
+            <!-- Page Header -->
+            <div class="catalog-header fade-in-up">
+                <div class="catalog-header-left">
+                    <h2>Product Catalog</h2>
+                    <p>Manage your product inventory and pricing</p>
+                </div>
+                <div style="display:flex;align-items:center;gap:12px;">
+                    <span class="product-count-badge" id="countBadge">
+                        <i class="fas fa-box-open"></i> <span id="totalCount">0</span> products
+                    </span>
+                    <button class="btn-add-product" onclick="openModal(event)">
+                        <i class="fas fa-plus"></i> Add Product
+                    </button>
+                </div>
+            </div>
+
+            <!-- Stats Bar -->
+            <div class="stats-bar fade-in-up stagger-1" id="statsBar">
+                <div class="stat-card">
+                    <div class="stat-icon total"><i class="fas fa-boxes-stacked"></i></div>
+                    <div class="stat-info"><span class="stat-value" id="statTotal">—</span><span class="stat-label">Total Products</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon active"><i class="fas fa-circle-check"></i></div>
+                    <div class="stat-info"><span class="stat-value" id="statActive">—</span><span class="stat-label">Active</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon inactive"><i class="fas fa-circle-pause"></i></div>
+                    <div class="stat-info"><span class="stat-value" id="statInactive">—</span><span class="stat-label">Inactive</span></div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-icon value"><i class="fas fa-indian-rupee-sign"></i></div>
+                    <div class="stat-info"><span class="stat-value" id="statAvgPrice">—</span><span class="stat-label">Avg. Price</span></div>
+                </div>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="catalog-toolbar fade-in-up stagger-2">
+                <div class="toolbar-left">
+                    <div class="filter-pills">
+                        <button class="pill-btn active" data-filter="all" onclick="setFilter('all', this)">
+                            All <span class="pill-count" id="countAll">0</span>
+                        </button>
+                        <button class="pill-btn" data-filter="true" onclick="setFilter('true', this)">
+                            Active <span class="pill-count" id="countActive">0</span>
+                        </button>
+                        <button class="pill-btn" data-filter="false" onclick="setFilter('false', this)">
+                            Inactive <span class="pill-count" id="countInactive">0</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="toolbar-right">
+                    <div class="search-container">
+                        <div class="search-bar" id="searchBar" onclick="expandSearch()">
+                            <i class="fas fa-search search-icon"></i>
+                            <input type="text" id="searchInput" placeholder="Search products..." oninput="onSearchInput()" onblur="collapseSearch()">
+                        </div>
+                        <button class="search-clear" id="searchClear" onclick="clearSearch()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="active" onclick="setView('grid', this)" title="Grid View"><i class="fas fa-grid-2"></i></button>
+                        <button onclick="setView('list', this)" title="List View"><i class="fas fa-list"></i></button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Category Filter Pills -->
+            <div class="category-pills fade-in-up stagger-3" id="categoryPills" style="display:none;"></div>
+
+            <!-- Product Grid -->
+            <div class="product-grid" id="productGrid"></div>
+
+        </div>
+    </div>
+
+    <!-- Slide-in Product Modal -->
+    <div class="modal-overlay" id="productModal" onclick="closeModalOnOverlay(event)">
+        <div class="modal-panel" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <div class="modal-header-left">
+                    <div class="modal-header-icon"><i class="fas fa-box" id="modalIcon"></i></div>
+                    <div>
+                        <h3 id="modalTitle">Add New Product</h3>
+                        <p id="modalSubtitle">Fill in the product details below</p>
+                    </div>
+                </div>
+                <button class="modal-close-btn" onclick="closeModal()"><i class="fas fa-xmark"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="productForm" onsubmit="saveProduct(event)">
+                    <input type="hidden" id="productId">
+                    <div class="form-grid">
+                        <div class="form-group full">
+                            <label>Product Name <span class="required">*</span></label>
+                            <input type="text" id="pName" required placeholder="e.g. Premium Steel Pipe" autocomplete="off">
+                        </div>
+                        <div class="form-group full">
+                            <label>Description</label>
+                            <textarea id="pDesc" rows="3" placeholder="Detailed product description..."></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label>HSN Code</label>
+                            <input type="text" id="pHsn" placeholder="e.g. 7304">
+                        </div>
+                        <div class="form-group">
+                            <label>Unit of Measure</label>
+                            <select id="pUnit">
+                                <option value="piece">Piece</option>
+                                <option value="kg">Kg</option>
+                                <option value="meter">Meter</option>
+                                <option value="box">Box</option>
+                                <option value="set">Set</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Base Price (₹) <span class="required">*</span></label>
+                            <input type="number" id="pPrice" required min="0" step="0.01" placeholder="0.00">
+                        </div>
+                        <div class="form-group">
+                            <label>GST Rate (%)</label>
+                            <select id="pGst">
+                                <option value="0">0% (Exempt)</option>
+                                <option value="5">5%</option>
+                                <option value="12">12%</option>
+                                <option value="18" selected>18%</option>
+                                <option value="28">28%</option>
+                            </select>
+                        </div>
+                        <div class="form-group full">
+                            <label>Image URL <span style="font-weight:400;text-transform:none;color:var(--text-muted)">(optional)</span></label>
+                            <div class="img-preview-row">
+                                <input type="url" id="pImageUrl" placeholder="https://example.com/image.jpg" oninput="previewImage()">
+                                <div class="img-preview-thumb" id="imgPreviewThumb">
+                                    <i class="fas fa-image"></i>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Category</label>
+                            <input type="text" id="pCategory" placeholder="e.g. Pipes, Fittings" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label>Status</label>
+                            <select id="pActive">
+                                <option value="true">Active</option>
+                                <option value="false">Inactive</option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <div class="modal-footer-left"><i class="fas fa-keyboard"></i> Press Esc to close</div>
+                <div class="modal-footer-right">
+                    <button class="btn btn-ghost" onclick="closeModal()">Cancel</button>
+                    <button class="btn btn-primary" onclick="saveProduct(event)" id="saveBtn">
+                        <i class="fas fa-check"></i> Save Product
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div class="confirm-overlay" id="confirmModal">
+        <div class="confirm-card">
+            <div class="confirm-icon"><i class="fas fa-trash-can"></i></div>
+            <h3>Delete Product?</h3>
+            <p id="confirmText">This action cannot be undone. The product will be permanently removed.</p>
+            <div class="confirm-actions">
+                <button class="btn btn-ghost" onclick="closeConfirm()">Cancel</button>
+                <button class="btn btn-danger" id="confirmDeleteBtn" onclick="confirmDelete()">
+                    <i class="fas fa-trash"></i> Delete
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notifPanelContainer"></div>
+    <div id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+        /* ─── Init ──────────────────────────────────────────────── */
+        document.getElementById('sidebarContainer').innerHTML = generateSidebar('catalog');
+        document.getElementById('topbarContainer').innerHTML = generateTopbar('Product Catalog');
+        document.getElementById('notifPanelContainer').innerHTML = generateNotifPanel();
+
+        let allProducts = [];
+        let searchTimer = null;
+        let editingId = null;
+        let currentFilter = 'all';
+        let currentCategory = 'all';
+        let currentView = 'grid';
+        let pendingDeleteId = null;
+        let isLoading = true;
+
+        /* ─── Keyboard shortcuts ────────────────────────────────── */
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Escape') { closeModal(); closeConfirm(); }
+            if (e.key === '/' && !e.ctrlKey && !isModalOpen()) { e.preventDefault(); expandSearch(); document.getElementById('searchInput').focus(); }
+            if ((e.ctrlKey || e.metaKey) && e.key === 'n' && !isModalOpen()) { e.preventDefault(); openModal(e); }
+        });
+        function isModalOpen() {
+            return document.getElementById('productModal').classList.contains('open') ||
+                   document.getElementById('confirmModal').classList.contains('open');
+        }
+
+        /* ─── Filter & Search ───────────────────────────────────── */
+        function setFilter(val, btn) {
+            document.querySelectorAll('.pill-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentFilter = val;
+            renderGrid();
+        }
+
+        function setCategory(cat, btn) {
+            document.querySelectorAll('.cat-pill').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            currentCategory = cat;
+            renderGrid();
+        }
+
+        function expandSearch() {
+            document.getElementById('searchBar').classList.add('expanded');
+            document.getElementById('searchInput').focus();
+        }
+        function collapseSearch() {
+            const input = document.getElementById('searchInput');
+            if (!input.value.trim()) {
+                document.getElementById('searchBar').classList.remove('expanded');
+            }
+        }
+        function onSearchInput() {
+            clearTimeout(searchTimer);
+            const val = document.getElementById('searchInput').value;
+            document.getElementById('searchClear').classList.toggle('visible', val.length > 0);
+            searchTimer = setTimeout(renderGrid, 250);
+        }
+        function clearSearch() {
+            document.getElementById('searchInput').value = '';
+            document.getElementById('searchClear').classList.remove('visible');
+            renderGrid();
+        }
+
+        function setView(view, btn) {
+            currentView = view;
+            document.querySelectorAll('.view-toggle button').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            const grid = document.getElementById('productGrid');
+            grid.classList.toggle('list-view', view === 'list');
+        }
+
+        /* ─── Stats ─────────────────────────────────────────────── */
+        function updateStats() {
+            const total = allProducts.length;
+            const active = allProducts.filter(p => p.is_active).length;
+            const inactive = total - active;
+            const avgPrice = total ? (allProducts.reduce((s, p) => s + Number(p.base_price || 0), 0) / total) : 0;
+
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statActive').textContent = active;
+            document.getElementById('statInactive').textContent = inactive;
+            document.getElementById('statAvgPrice').textContent = '₹' + Math.round(avgPrice).toLocaleString('en-IN');
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('countAll').textContent = total;
+            document.getElementById('countActive').textContent = active;
+            document.getElementById('countInactive').textContent = inactive;
+        }
+
+        /* ─── Category Pills ────────────────────────────────────── */
+        function updateCategoryPills() {
+            const cats = new Set();
+            allProducts.forEach(p => { if (p.category) cats.add(p.category); });
+            const container = document.getElementById('categoryPills');
+            if (cats.size === 0) { container.style.display = 'none'; return; }
+            container.style.display = 'flex';
+            const pills = [`<button class="cat-pill ${currentCategory === 'all' ? 'active' : ''}" onclick="setCategory('all', this)"><i class="fas fa-layer-group"></i> All</button>`];
+            cats.forEach(c => {
+                pills.push(`<button class="cat-pill ${currentCategory === c ? 'active' : ''}" onclick="setCategory('${escapeHtml(c)}', this)"><i class="fas fa-tag"></i> ${escapeHtml(c)}</button>`);
+            });
+            container.innerHTML = pills.join('');
+        }
+
+        /* ─── Skeleton Loading ──────────────────────────────────── */
+        function showSkeletons() {
+            const grid = document.getElementById('productGrid');
+            grid.innerHTML = Array(8).fill(0).map(() => `
+                <div class="skeleton-card">
+                    <div class="skeleton-img"></div>
+                    <div class="skeleton-body">
+                        <div class="skeleton-line title"></div>
+                        <div class="skeleton-line desc"></div>
+                        <div class="skeleton-line desc2"></div>
+                        <div class="skeleton-line price"></div>
+                        <div class="skeleton-line actions"></div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        /* ─── Load Products ─────────────────────────────────────── */
+        async function loadProducts() {
+            if (isLoading) showSkeletons();
+            try {
+                const res = await apiCall('GET', '/api/products?per_page=1000');
+                if (!res) return;
+                const data = await res.json();
+                allProducts = data.products || [];
+                isLoading = false;
+                updateStats();
+                updateCategoryPills();
+                renderGrid();
+            } catch(e) {
+                isLoading = false;
+                showToast('Failed to load products', 'error');
+            }
+        }
+
+        /* ─── Render Grid ───────────────────────────────────────── */
+        function renderGrid() {
+            const grid = document.getElementById('productGrid');
+            const search = document.getElementById('searchInput').value.toLowerCase().trim();
+
+            let filtered = allProducts;
+            if (currentFilter === 'true') filtered = filtered.filter(p => p.is_active);
+            if (currentFilter === 'false') filtered = filtered.filter(p => !p.is_active);
+            if (currentCategory !== 'all') filtered = filtered.filter(p => p.category === currentCategory);
+            if (search) filtered = filtered.filter(p =>
+                p.name.toLowerCase().includes(search) ||
+                (p.description || '').toLowerCase().includes(search) ||
+                (p.category || '').toLowerCase().includes(search) ||
+                (p.hsn_code || '').toLowerCase().includes(search)
+            );
+
+            if (!filtered.length) {
+                grid.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-illustration">
+                            <i class="fas fa-boxes-packing"></i>
+                        </div>
+                        <h3>${search ? 'No matching products' : 'Your catalog is empty'}</h3>
+                        <p>${search ? 'Try a different search term or adjust your filters' : 'Add your first product to get started with quotes and invoices'}</p>
+                        ${!search ? `<button class="btn-add-product" onclick="openModal(event)" style="margin:0 auto;">
+                            <i class="fas fa-plus"></i> Add First Product
+                        </button>` : ''}
+                    </div>`;
+                return;
+            }
+
+            grid.innerHTML = filtered.map((p, i) => {
+                const imgHtml = p.image_url
+                    ? `<img src="${escapeHtml(p.image_url)}" alt="${escapeHtml(p.name)}" loading="lazy" onerror="this.parentElement.innerHTML='<div class=\\'product-img-placeholder\\'><i class=\\'fas fa-image-slash\\'></i><span>Image Error</span></div>'">`
+                    : `<div class="product-img-placeholder"><i class="fas fa-box"></i><span>No Image</span></div>`;
+                const catBadge = p.category ? `<span class="category-badge">${escapeHtml(p.category)}</span>` : '';
+                return `
+                <div class="product-card fade-in-up" style="animation-delay:${Math.min(i * 0.04, 0.6)}s">
+                    <div class="product-img-wrapper">
+                        ${imgHtml}
+                        ${catBadge}
+                        <span class="status-badge ${p.is_active ? 'active' : 'inactive'}">
+                            ${p.is_active ? '● Active' : '● Inactive'}
+                        </span>
+                    </div>
+                    <div class="product-body">
+                        <div class="product-name" title="${escapeHtml(p.name)}">${escapeHtml(p.name)}</div>
+                        <div class="product-description">${escapeHtml(p.description || 'No description provided')}</div>
+                        <div class="product-meta-tags">
+                            <span class="meta-tag"><i class="fas fa-percent"></i> GST ${p.gst_rate}%</span>
+                            ${p.hsn_code ? `<span class="meta-tag"><i class="fas fa-barcode"></i> ${escapeHtml(p.hsn_code)}</span>` : ''}
+                            <span class="meta-tag"><i class="fas fa-ruler"></i> ${escapeHtml(p.unit)}</span>
+                        </div>
+                        <div class="product-price-row">
+                            <span class="price-amount">₹${Number(p.base_price).toLocaleString('en-IN')}</span>
+                            <span class="price-unit">/ ${escapeHtml(p.unit)}</span>
+                        </div>
+                        <div class="product-actions">
+                            <button class="action-btn quote" onclick="quickQuote('${p.id}','${escapeHtml(p.name)}',${p.base_price},${p.gst_rate},'${p.unit}')">
+                                <i class="fas fa-file-invoice"></i> Quote
+                            </button>
+                            <button class="action-btn edit" title="Edit" onclick="openEditModal('${p.id}')"><i class="fas fa-pen"></i></button>
+                            <button class="action-btn delete" title="Delete" onclick="deleteProduct('${p.id}','${escapeHtml(p.name)}')"><i class="fas fa-trash-can"></i></button>
+                        </div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        /* ─── Add Ripple Effect ─────────────────────────────────── */
+        function openModal(e) {
+            if (e && e.currentTarget) {
+                const btn = e.currentTarget;
+                const rect = btn.getBoundingClientRect();
+                const ripple = document.createElement('span');
+                ripple.className = 'ripple-effect';
+                const size = Math.max(rect.width, rect.height);
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = ((e.clientX || rect.left + rect.width/2) - rect.left - size/2) + 'px';
+                ripple.style.top = ((e.clientY || rect.top + rect.height/2) - rect.top - size/2) + 'px';
+                btn.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            }
+
+            editingId = null;
+            document.getElementById('modalTitle').textContent = 'Add New Product';
+            document.getElementById('modalSubtitle').textContent = 'Fill in the product details below';
+            document.getElementById('modalIcon').className = 'fas fa-plus';
+            document.getElementById('productForm').reset();
+            document.getElementById('pUnit').value = 'piece';
+            document.getElementById('pGst').value = '18';
+            document.getElementById('pActive').value = 'true';
+            document.getElementById('pCategory').value = '';
+            resetImgPreview();
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-check"></i> Save Product';
+            setTimeout(() => {
+                document.getElementById('productModal').classList.add('open');
+                setTimeout(() => document.getElementById('pName').focus(), 200);
+            }, 100);
+        }
+
+        function openEditModal(id) {
+            const p = allProducts.find(x => x.id === id);
+            if (!p) return;
+            editingId = id;
+            document.getElementById('modalTitle').textContent = 'Edit Product';
+            document.getElementById('modalSubtitle').textContent = 'Update product information';
+            document.getElementById('modalIcon').className = 'fas fa-pen-to-square';
+            document.getElementById('productId').value = p.id;
+            document.getElementById('pName').value = p.name;
+            document.getElementById('pDesc').value = p.description || '';
+            document.getElementById('pHsn').value = p.hsn_code || '';
+            document.getElementById('pUnit').value = p.unit;
+            document.getElementById('pPrice').value = p.base_price;
+            document.getElementById('pGst').value = p.gst_rate;
+            document.getElementById('pImageUrl').value = p.image_url || '';
+            document.getElementById('pCategory').value = p.category || '';
+            document.getElementById('pActive').value = p.is_active ? 'true' : 'false';
+            document.getElementById('saveBtn').innerHTML = '<i class="fas fa-check"></i> Update Product';
+            previewImage();
+            document.getElementById('productModal').classList.add('open');
+        }
+
+        function closeModal() {
+            document.getElementById('productModal').classList.remove('open');
+        }
+        function closeModalOnOverlay(e) {
+            if (e.target.id === 'productModal') closeModal();
+        }
+
+        /* ─── Image Preview ─────────────────────────────────────── */
+        function previewImage() {
+            const url = document.getElementById('pImageUrl').value.trim();
+            const thumb = document.getElementById('imgPreviewThumb');
+            if (url) {
+                thumb.innerHTML = `<img src="${escapeHtml(url)}" onerror="this.parentElement.innerHTML='<i class=\\'fas fa-image-slash\\' style=\\'color:var(--red)\\'></i>'">`;
+            } else {
+                resetImgPreview();
+            }
+        }
+        function resetImgPreview() {
+            document.getElementById('imgPreviewThumb').innerHTML = '<i class="fas fa-image"></i>';
+        }
+
+        /* ─── Save Product ──────────────────────────────────────── */
+        async function saveProduct(e) {
+            if (e) e.preventDefault();
+            const btn = document.getElementById('saveBtn');
+            const name = document.getElementById('pName').value.trim();
+            const price = parseFloat(document.getElementById('pPrice').value);
+            if (!name || isNaN(price)) {
+                showToast('Please fill in required fields', 'error');
+                return;
+            }
+
+            const body = {
+                name,
+                description: document.getElementById('pDesc').value.trim() || null,
+                hsn_code: document.getElementById('pHsn').value.trim() || null,
+                unit: document.getElementById('pUnit').value,
+                base_price: price,
+                gst_rate: parseFloat(document.getElementById('pGst').value),
+                image_url: document.getElementById('pImageUrl').value.trim() || null,
+                category: document.getElementById('pCategory').value.trim() || null,
+                is_active: document.getElementById('pActive').value === 'true'
+            };
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            try {
+                const res = await apiCall(
+                    editingId ? 'PUT' : 'POST',
+                    editingId ? `/api/products/${editingId}` : '/api/products',
+                    body
+                );
+                if (res && res.ok) {
+                    showToast(editingId ? 'Product updated successfully' : 'Product added successfully', 'success');
+                    closeModal();
+                    loadProducts();
+                } else {
+                    const err = res ? await res.json().catch(() => ({})) : {};
+                    showToast(err.error || 'Failed to save product', 'error');
+                }
+            } catch(e) {
+                showToast('Network error — please try again', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = editingId
+                    ? '<i class="fas fa-check"></i> Update Product'
+                    : '<i class="fas fa-check"></i> Save Product';
+            }
+        }
+
+        /* ─── Delete (with Confirmation Modal) ──────────────────── */
+        function deleteProduct(id, name) {
+            pendingDeleteId = id;
+            document.getElementById('confirmText').innerHTML =
+                `Are you sure you want to delete <strong>"${name}"</strong>? This action cannot be undone.`;
+            document.getElementById('confirmModal').classList.add('open');
+        }
+        function closeConfirm() {
+            document.getElementById('confirmModal').classList.remove('open');
+            pendingDeleteId = null;
+        }
+        async function confirmDelete() {
+            if (!pendingDeleteId) return;
+            const btn = document.getElementById('confirmDeleteBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+            try {
+                const res = await apiCall('DELETE', `/api/products/${pendingDeleteId}`);
+                if (res && res.ok) {
+                    showToast('Product deleted', 'success');
+                    closeConfirm();
+                    loadProducts();
+                } else {
+                    showToast('Failed to delete product', 'error');
+                }
+            } catch(e) {
+                showToast('Network error', 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-trash"></i> Delete';
+            }
+        }
+
+        /* ─── Quick Quote ───────────────────────────────────────── */
+        function quickQuote(id, name, price, gst, unit) {
+            sessionStorage.setItem('quickQuotationItem', JSON.stringify({
+                product_id: id, name, unit_price: price, gst_rate: gst, unit, qty: 1
+            }));
+            window.location.href = '/app/quotations?action=new';
+        }
+
+        /* ─── Boot ──────────────────────────────────────────────── */
+        if (authGuard()) { initLeadFlow(); loadProducts(); }
+    </script>
+</body>
+</html>

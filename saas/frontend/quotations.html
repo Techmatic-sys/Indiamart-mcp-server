@@ -1,0 +1,945 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quotations & Invoices — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <style>
+        /* ── Layout ── */
+        .main { flex: 1; margin-left: var(--sidebar-width); min-height: 100vh; }
+        .content { padding: 32px; max-width: 1400px; margin: 0 auto; }
+
+        /* ── Tab System with Sliding Underline ── */
+        .q-tabs-wrapper {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 28px; flex-wrap: wrap; gap: 16px;
+        }
+        .q-tabs {
+            display: flex; position: relative; background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur, 16px));
+            padding: 6px; border-radius: 50px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--shadow-sm);
+        }
+        .q-tab-btn {
+            padding: 11px 28px; border: none; background: transparent; font-size: 14px;
+            font-weight: 700; color: var(--text-secondary); cursor: pointer;
+            position: relative; z-index: 2; transition: color 0.35s ease, transform 0.2s;
+            display: flex; align-items: center; gap: 8px; border-radius: 40px;
+            user-select: none;
+        }
+        .q-tab-btn:hover { color: var(--text-primary); }
+        .q-tab-btn.active { color: #fff; }
+        .q-tab-btn:active { transform: scale(0.97); }
+        .q-tab-btn .tab-count {
+            background: rgba(255,255,255,0.2); padding: 2px 8px; border-radius: 10px;
+            font-size: 11px; font-weight: 800; min-width: 20px; text-align: center;
+            transition: background 0.3s;
+        }
+        .q-tab-btn.active .tab-count { background: rgba(255,255,255,0.25); }
+        .q-tab-bg {
+            position: absolute; top: 6px; bottom: 6px; left: 6px;
+            background: linear-gradient(135deg, var(--accent), #ff6b8a);
+            border-radius: 40px; z-index: 1;
+            transition: all 0.45s cubic-bezier(0.4, 0, 0.15, 1);
+            box-shadow: 0 4px 16px rgba(233,69,96,0.35);
+        }
+
+        /* ── Create Button with Ripple ── */
+        .btn-create {
+            background: linear-gradient(135deg, var(--accent), #ff6b8a);
+            color: #fff; padding: 12px 26px; border-radius: 50px;
+            font-size: 14px; font-weight: 700; border: none; cursor: pointer;
+            display: flex; align-items: center; gap: 8px;
+            box-shadow: 0 4px 16px rgba(233,69,96,0.35);
+            transition: all 0.3s ease; position: relative; overflow: hidden;
+        }
+        .btn-create:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(233,69,96,0.45); }
+        .btn-create:active { transform: translateY(0) scale(0.97); }
+        .btn-create .ripple {
+            position: absolute; border-radius: 50%; background: rgba(255,255,255,0.4);
+            transform: scale(0); animation: rippleAnim 0.6s ease-out;
+            pointer-events: none;
+        }
+        @keyframes rippleAnim { to { transform: scale(4); opacity: 0; } }
+
+        /* ── Stats Bar ── */
+        .stats-row {
+            display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 16px; margin-bottom: 28px;
+        }
+        .stat-glow-pill {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur, 16px));
+            border: 1px solid var(--glass-border); border-radius: var(--radius-lg, 16px);
+            padding: 22px 20px; display: flex; align-items: center; gap: 16px;
+            box-shadow: var(--shadow-sm); transition: all 0.35s cubic-bezier(0.4,0,0.2,1);
+            position: relative; overflow: hidden;
+        }
+        .stat-glow-pill::after {
+            content: ''; position: absolute; top: -50%; right: -50%;
+            width: 100%; height: 100%; border-radius: 50%;
+            background: radial-gradient(circle, rgba(233,69,96,0.04) 0%, transparent 70%);
+            transition: opacity 0.4s;
+        }
+        .stat-glow-pill:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-md);
+            border-color: var(--accent);
+        }
+        .stat-glow-pill:hover::after { opacity: 1; }
+        .stat-icon-wrap {
+            width: 50px; height: 50px; border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 20px; flex-shrink: 0;
+            background: rgba(233,69,96,0.1); color: var(--accent);
+            transition: transform 0.3s;
+        }
+        .stat-glow-pill:hover .stat-icon-wrap { transform: scale(1.08) rotate(-3deg); }
+        .stat-info { position: relative; z-index: 1; }
+        .stat-info .val {
+            font-size: 26px; font-weight: 900; color: var(--text-primary);
+            margin-bottom: 2px; line-height: 1.1;
+        }
+        .stat-info .lbl {
+            font-size: 11px; font-weight: 600; text-transform: uppercase;
+            color: var(--text-muted); letter-spacing: 0.8px;
+        }
+
+        /* ── Glassmorphism Table Container ── */
+        .table-container {
+            background: var(--glass-bg); backdrop-filter: blur(var(--glass-blur, 16px));
+            border: 1px solid var(--glass-border); border-radius: var(--radius-lg, 16px);
+            overflow: hidden; box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.3s;
+        }
+        .table-container:hover { box-shadow: var(--shadow-md); }
+
+        /* ── Table Toolbar ── */
+        .table-toolbar {
+            padding: 20px 24px; border-bottom: 1px solid var(--border-secondary);
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 12px; flex-wrap: wrap;
+        }
+        .toolbar-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .toolbar-right { display: flex; align-items: center; gap: 10px; }
+
+        /* ── Animated Search ── */
+        .search-wrap {
+            position: relative; display: flex; align-items: center;
+        }
+        .search-wrap .search-icon {
+            position: absolute; left: 14px; color: var(--text-muted);
+            font-size: 13px; transition: color 0.3s; pointer-events: none; z-index: 2;
+        }
+        .search-input {
+            background: var(--bg-input, var(--bg-tertiary));
+            border: 1.5px solid var(--border-input, var(--border-secondary));
+            padding: 10px 16px 10px 40px; border-radius: 50px;
+            font-size: 13px; color: var(--text-primary);
+            width: 60px; transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+            outline: none; font-family: inherit; cursor: pointer;
+        }
+        .search-input:focus, .search-input.expanded {
+            width: 280px; cursor: text;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+        }
+        .search-input:focus + .search-icon { color: var(--accent); }
+        .search-input::placeholder { color: var(--text-muted); opacity: 0.7; }
+
+        /* ── Status Filter ── */
+        .filter-select {
+            background: var(--bg-input, var(--bg-tertiary));
+            border: 1.5px solid var(--border-input, var(--border-secondary));
+            padding: 10px 36px 10px 16px; border-radius: 50px;
+            font-size: 13px; font-weight: 600; color: var(--text-primary);
+            cursor: pointer; outline: none; font-family: inherit;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+            background-repeat: no-repeat; background-position: right 14px center;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .filter-select:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(233,69,96,0.1);
+        }
+
+        /* ── Premium Data Table ── */
+        .table-scroll { overflow-x: auto; }
+        .premium-table { width: 100%; border-collapse: collapse; min-width: 700px; }
+        .premium-table th {
+            padding: 14px 24px; text-align: left; font-size: 11px; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 0.7px; color: var(--text-tertiary);
+            background: var(--bg-tertiary, rgba(0,0,0,0.02));
+            border-bottom: 1.5px solid var(--border-secondary);
+            cursor: pointer; transition: all 0.25s; user-select: none;
+            position: sticky; top: 0; z-index: 1;
+            white-space: nowrap;
+        }
+        .premium-table th:hover { color: var(--accent); background: rgba(233,69,96,0.03); }
+        .premium-table th.sorted { color: var(--accent); }
+        .premium-table th .sort-icon {
+            font-size: 10px; margin-left: 4px; opacity: 0.4; transition: opacity 0.2s, transform 0.2s;
+        }
+        .premium-table th.sorted .sort-icon { opacity: 1; }
+        .premium-table th.sorted.desc .sort-icon { transform: rotate(180deg); }
+        .premium-table th:last-child { cursor: default; }
+        .premium-table th:last-child:hover { color: var(--text-tertiary); background: var(--bg-tertiary, rgba(0,0,0,0.02)); }
+
+        .premium-table td {
+            padding: 16px 24px; border-bottom: 1px solid var(--border-secondary);
+            font-size: 13px; font-weight: 500; vertical-align: middle;
+            transition: background 0.2s;
+        }
+        .premium-table tbody tr {
+            transition: all 0.25s ease;
+        }
+        .premium-table tbody tr:nth-child(even) { background: rgba(0,0,0,0.012); }
+        [data-theme="dark"] .premium-table tbody tr:nth-child(even) { background: rgba(255,255,255,0.012); }
+        .premium-table tbody tr:hover {
+            background: rgba(233,69,96,0.04);
+            transform: scale(1.002);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .premium-table tbody tr:active { transform: scale(0.999); }
+
+        /* ── Buyer Column ── */
+        .buyer-col { display: flex; align-items: center; gap: 12px; }
+        .buyer-avatar {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-weight: 800; font-size: 14px; color: #fff; flex-shrink: 0;
+            background: linear-gradient(135deg, var(--accent), #ff6b8a);
+        }
+        .buyer-info { display: flex; flex-direction: column; gap: 1px; }
+        .buyer-info strong { font-size: 13.5px; font-weight: 700; color: var(--text-primary); }
+        .buyer-info span { font-size: 11.5px; color: var(--text-muted); }
+
+        /* ── Amount ── */
+        .amt-val { font-size: 14px; font-weight: 800; color: var(--text-primary); white-space: nowrap; }
+
+        /* ── Glowing Status Badges ── */
+        .glow-badge {
+            padding: 5px 14px; border-radius: 20px; font-size: 11px; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px; display: inline-flex;
+            align-items: center; gap: 6px; position: relative; overflow: hidden;
+            white-space: nowrap;
+        }
+        .glow-badge .dot {
+            width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+        }
+        .glow-badge::before {
+            content: ''; position: absolute; top: 0; left: -100%;
+            width: 50%; height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: badgeSweep 3s ease-in-out infinite;
+        }
+        @keyframes badgeSweep { 0%,100% { left: -100%; } 50% { left: 200%; } }
+
+        .glow-draft { background: rgba(108,117,125,0.1); color: #6c757d; border: 1px solid rgba(108,117,125,0.2); }
+        .glow-draft .dot { background: #6c757d; }
+
+        .glow-sent { background: rgba(59,130,246,0.1); color: #3b82f6; border: 1px solid rgba(59,130,246,0.25); box-shadow: 0 0 12px rgba(59,130,246,0.1); }
+        .glow-sent .dot { background: #3b82f6; box-shadow: 0 0 6px rgba(59,130,246,0.5); }
+
+        .glow-accepted { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.25); box-shadow: 0 0 12px rgba(34,197,94,0.1); }
+        .glow-accepted .dot { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+
+        .glow-rejected { background: rgba(239,68,68,0.1); color: #ef4444; border: 1px solid rgba(239,68,68,0.25); box-shadow: 0 0 12px rgba(239,68,68,0.1); }
+        .glow-rejected .dot { background: #ef4444; box-shadow: 0 0 6px rgba(239,68,68,0.5); }
+
+        .glow-unpaid { background: rgba(234,179,8,0.1); color: #ca8a04; border: 1px solid rgba(234,179,8,0.25); box-shadow: 0 0 12px rgba(234,179,8,0.1); }
+        .glow-unpaid .dot { background: #eab308; box-shadow: 0 0 6px rgba(234,179,8,0.5); }
+
+        .glow-partial { background: rgba(6,182,212,0.1); color: #06b6d4; border: 1px solid rgba(6,182,212,0.25); box-shadow: 0 0 12px rgba(6,182,212,0.1); }
+        .glow-partial .dot { background: #06b6d4; box-shadow: 0 0 6px rgba(6,182,212,0.5); }
+
+        .glow-paid { background: rgba(34,197,94,0.1); color: #22c55e; border: 1px solid rgba(34,197,94,0.25); box-shadow: 0 0 12px rgba(34,197,94,0.1); }
+        .glow-paid .dot { background: #22c55e; box-shadow: 0 0 6px rgba(34,197,94,0.5); }
+
+        /* ── Dark mode neon glow boost ── */
+        [data-theme="dark"] .glow-sent { box-shadow: 0 0 18px rgba(59,130,246,0.2), inset 0 0 8px rgba(59,130,246,0.05); }
+        [data-theme="dark"] .glow-accepted { box-shadow: 0 0 18px rgba(34,197,94,0.2), inset 0 0 8px rgba(34,197,94,0.05); }
+        [data-theme="dark"] .glow-rejected { box-shadow: 0 0 18px rgba(239,68,68,0.2), inset 0 0 8px rgba(239,68,68,0.05); }
+        [data-theme="dark"] .glow-unpaid { box-shadow: 0 0 18px rgba(234,179,8,0.2), inset 0 0 8px rgba(234,179,8,0.05); }
+        [data-theme="dark"] .glow-partial { box-shadow: 0 0 18px rgba(6,182,212,0.2), inset 0 0 8px rgba(6,182,212,0.05); }
+        [data-theme="dark"] .glow-paid { box-shadow: 0 0 18px rgba(34,197,94,0.2), inset 0 0 8px rgba(34,197,94,0.05); }
+        [data-theme="dark"] .stat-glow-pill:hover { box-shadow: 0 0 24px rgba(233,69,96,0.15); }
+
+        /* ── Date Column ── */
+        .date-col { font-size: 13px; color: var(--text-secondary); white-space: nowrap; }
+        .date-col small { display: block; font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+
+        /* ── Action Buttons ── */
+        .action-cell { display: flex; gap: 6px; align-items: center; }
+        .btn-act {
+            width: 34px; height: 34px; border-radius: 10px;
+            border: 1px solid var(--border-secondary);
+            background: var(--bg-secondary, var(--bg-primary));
+            color: var(--text-secondary); cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.25s ease; font-size: 13px;
+            position: relative; overflow: hidden;
+        }
+        .btn-act:hover {
+            border-color: var(--accent); color: var(--accent);
+            background: rgba(233,69,96,0.06);
+            transform: translateY(-1px);
+            box-shadow: 0 3px 8px rgba(233,69,96,0.12);
+        }
+        .btn-act:active { transform: translateY(0) scale(0.94); }
+        .btn-act.btn-green:hover { border-color: #22c55e; color: #22c55e; background: rgba(34,197,94,0.06); box-shadow: 0 3px 8px rgba(34,197,94,0.12); }
+        .btn-act.btn-blue:hover { border-color: #3b82f6; color: #3b82f6; background: rgba(59,130,246,0.06); box-shadow: 0 3px 8px rgba(59,130,246,0.12); }
+        .btn-act[title]::after {
+            content: attr(title); position: absolute; bottom: calc(100% + 6px);
+            left: 50%; transform: translateX(-50%) scale(0.9);
+            background: var(--bg-tertiary); color: var(--text-primary);
+            padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 600;
+            white-space: nowrap; opacity: 0; pointer-events: none;
+            transition: all 0.2s ease; border: 1px solid var(--border-secondary);
+            box-shadow: var(--shadow-sm);
+        }
+        .btn-act:hover[title]::after { opacity: 1; transform: translateX(-50%) scale(1); }
+
+        /* ── Row Entry Animation ── */
+        .row-enter { animation: rowSlideIn 0.4s ease forwards; opacity: 0; }
+        @keyframes rowSlideIn {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Skeleton Loading ── */
+        .skeleton-row td { padding: 18px 24px; }
+        .skeleton {
+            background: linear-gradient(90deg,
+                var(--border-secondary) 25%,
+                rgba(233,69,96,0.06) 50%,
+                var(--border-secondary) 75%);
+            background-size: 200% 100%;
+            animation: skeletonShimmer 1.5s infinite ease-in-out;
+            border-radius: 8px; height: 16px; display: block;
+        }
+        .skeleton.w-sm { width: 60px; }
+        .skeleton.w-md { width: 120px; }
+        .skeleton.w-lg { width: 180px; }
+        .skeleton.w-badge { width: 80px; height: 28px; border-radius: 20px; }
+        .skeleton.w-avatar { width: 38px; height: 38px; border-radius: 10px; }
+        .skeleton-buyer { display: flex; align-items: center; gap: 12px; }
+        .skeleton-buyer-info { display: flex; flex-direction: column; gap: 6px; }
+        .skeleton-actions { display: flex; gap: 6px; }
+        .skeleton-actions .skeleton { width: 34px; height: 34px; border-radius: 10px; }
+        @keyframes skeletonShimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+        /* ── Empty State ── */
+        .empty-state {
+            text-align: center; padding: 80px 24px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+        .empty-illustration {
+            width: 160px; height: 160px; margin-bottom: 28px; position: relative;
+        }
+        .empty-illustration .circle {
+            width: 160px; height: 160px; border-radius: 50%;
+            background: linear-gradient(135deg, rgba(233,69,96,0.08), rgba(233,69,96,0.02));
+            display: flex; align-items: center; justify-content: center;
+            animation: emptyFloat 3s ease-in-out infinite;
+        }
+        .empty-illustration .circle i { font-size: 56px; color: var(--accent); opacity: 0.3; }
+        @keyframes emptyFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+        .empty-state h3 { font-size: 18px; font-weight: 800; color: var(--text-primary); margin-bottom: 8px; }
+        .empty-state p { font-size: 14px; color: var(--text-muted); max-width: 340px; line-height: 1.6; margin-bottom: 24px; }
+        .empty-state .btn-create { margin: 0 auto; }
+
+        /* ── Payment Modal ── */
+        .modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px); z-index: 2000;
+            display: none; align-items: center; justify-content: center;
+            animation: modalFadeIn 0.2s ease;
+        }
+        @keyframes modalFadeIn { from { opacity: 0; } to { opacity: 1; } }
+        .modal-card {
+            background: var(--bg-secondary, #fff); padding: 28px;
+            border-radius: var(--radius-lg, 16px); width: 360px;
+            max-width: 90vw; box-shadow: 0 24px 48px rgba(0,0,0,0.2);
+            border: 1px solid var(--glass-border);
+            animation: modalSlideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+        @keyframes modalSlideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        .modal-card h3 {
+            font-size: 18px; font-weight: 800; margin-bottom: 6px; color: var(--text-primary);
+        }
+        .modal-card .modal-desc { font-size: 13px; color: var(--text-muted); margin-bottom: 20px; }
+        .modal-card select {
+            width: 100%; padding: 12px 16px; margin-bottom: 20px;
+            border-radius: 12px; border: 1.5px solid var(--border-input, var(--border-secondary));
+            font-size: 14px; font-weight: 600; font-family: inherit;
+            background: var(--bg-input, var(--bg-tertiary)); color: var(--text-primary);
+            outline: none; transition: border-color 0.3s;
+        }
+        .modal-card select:focus { border-color: var(--accent); }
+        .modal-actions { display: flex; gap: 10px; justify-content: flex-end; }
+        .modal-actions .btn-ghost {
+            padding: 10px 20px; border-radius: 10px; border: 1px solid var(--border-secondary);
+            background: transparent; color: var(--text-secondary); cursor: pointer;
+            font-weight: 600; font-size: 13px; font-family: inherit; transition: all 0.2s;
+        }
+        .modal-actions .btn-ghost:hover { background: var(--bg-tertiary); }
+        .modal-actions .btn-primary {
+            padding: 10px 20px; border-radius: 10px; border: none;
+            background: linear-gradient(135deg, var(--accent), #ff6b8a);
+            color: #fff; cursor: pointer; font-weight: 700; font-size: 13px;
+            font-family: inherit; transition: all 0.2s;
+            display: flex; align-items: center; gap: 6px;
+            box-shadow: 0 2px 8px rgba(233,69,96,0.25);
+        }
+        .modal-actions .btn-primary:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(233,69,96,0.35); }
+
+        /* ── Responsive ── */
+        @media (max-width: 1024px) {
+            .q-tabs-wrapper { flex-direction: column; align-items: stretch; }
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .main { margin-left: 0; }
+            .content { padding: 20px 16px; }
+            .table-toolbar { flex-direction: column; gap: 12px; align-items: stretch; }
+            .toolbar-left, .toolbar-right { width: 100%; }
+            .search-input, .search-input:focus, .search-input.expanded { width: 100%; }
+            .filter-select { width: 100%; }
+            .stats-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+    <div class="main">
+        <div id="topbarContainer"></div>
+        <div class="content">
+
+            <!-- ── Tab Bar ── -->
+            <div class="q-tabs-wrapper">
+                <div class="q-tabs" id="tabContainer">
+                    <div class="q-tab-bg" id="tabBg"></div>
+                    <button class="q-tab-btn active" data-tab="quotations" onclick="switchTab('quotations', this)">
+                        <i class="fas fa-file-invoice"></i> Quotations <span class="tab-count" id="tabCountQt">0</span>
+                    </button>
+                    <button class="q-tab-btn" data-tab="invoices" onclick="switchTab('invoices', this)">
+                        <i class="fas fa-receipt"></i> Invoices <span class="tab-count" id="tabCountInv">0</span>
+                    </button>
+                </div>
+                <button class="btn-create" id="btnCreate" onclick="handleCreate(event)">
+                    <i class="fas fa-plus"></i> New Quotation
+                </button>
+            </div>
+
+            <!-- ── Stats Bar ── -->
+            <div class="stats-row" id="statsRow"></div>
+
+            <!-- ── Table Card ── -->
+            <div class="table-container animate-fade-in-up">
+                <div class="table-toolbar">
+                    <div class="toolbar-left">
+                        <div class="search-wrap">
+                            <input type="text" class="search-input" id="searchInput"
+                                placeholder="Search quotations..."
+                                onfocus="this.classList.add('expanded')"
+                                onblur="if(!this.value) this.classList.remove('expanded')"
+                                oninput="filterTable()">
+                            <i class="fas fa-search search-icon"></i>
+                        </div>
+                    </div>
+                    <div class="toolbar-right">
+                        <select id="statusFilter" class="filter-select" onchange="filterTable()">
+                            <option value="all">All Statuses</option>
+                            <option value="draft">Draft</option>
+                            <option value="sent">Sent</option>
+                            <option value="accepted">Accepted</option>
+                            <option value="rejected">Rejected</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="table-scroll">
+                    <table class="premium-table">
+                        <thead>
+                            <tr>
+                                <th onclick="sortTable('id')">Number <i class="fas fa-arrow-up sort-icon"></i></th>
+                                <th onclick="sortTable('buyer')">Buyer <i class="fas fa-arrow-up sort-icon"></i></th>
+                                <th onclick="sortTable('amount')">Amount <i class="fas fa-arrow-up sort-icon"></i></th>
+                                <th onclick="sortTable('status')">Status <i class="fas fa-arrow-up sort-icon"></i></th>
+                                <th onclick="sortTable('date')">Date <i class="fas fa-arrow-up sort-icon"></i></th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Payment Modal ── -->
+    <div class="modal-overlay" id="paymentModal">
+        <div class="modal-card">
+            <h3><i class="fas fa-credit-card" style="color:var(--accent);margin-right:8px;"></i>Update Payment</h3>
+            <p class="modal-desc">Change the payment status for this invoice.</p>
+            <select id="payStatusSel">
+                <option value="unpaid">Unpaid</option>
+                <option value="partial">Partially Paid</option>
+                <option value="paid">Paid</option>
+            </select>
+            <input type="hidden" id="payInvId">
+            <div class="modal-actions">
+                <button class="btn-ghost" onclick="closePaymentModal()">Cancel</button>
+                <button class="btn-primary" onclick="savePayment()"><i class="fas fa-check"></i> Save</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="notifPanelContainer"></div>
+    <div id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+        // ── Init shared layout ──
+        document.getElementById('sidebarContainer').innerHTML = generateSidebar('quotations');
+        document.getElementById('topbarContainer').innerHTML = generateTopbar('Quotations & Invoices');
+        document.getElementById('notifPanelContainer').innerHTML = generateNotifPanel();
+
+        // ── State ──
+        let currentTab = 'quotations';
+        let currentData = [];
+        let quotationsCache = null;
+        let invoicesCache = null;
+        let sortCol = 'date';
+        let sortAsc = false;
+
+        // ── Init tab indicator position ──
+        requestAnimationFrame(() => {
+            setTimeout(positionTabBg, 50);
+            window.addEventListener('resize', positionTabBg);
+        });
+
+        function positionTabBg() {
+            const activeBtn = document.querySelector('.q-tab-btn.active');
+            const bg = document.getElementById('tabBg');
+            if (!activeBtn || !bg) return;
+            bg.style.width = activeBtn.offsetWidth + 'px';
+            bg.style.left = activeBtn.offsetLeft + 'px';
+        }
+
+        // ── Tab Switching ──
+        function switchTab(tab, btn) {
+            if (currentTab === tab) return;
+            currentTab = tab;
+
+            document.querySelectorAll('.q-tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            positionTabBg();
+
+            // Update create button
+            const btnCreate = document.getElementById('btnCreate');
+            btnCreate.innerHTML = tab === 'quotations'
+                ? '<i class="fas fa-plus"></i> New Quotation'
+                : '<i class="fas fa-plus"></i> New Invoice';
+
+            // Update search placeholder
+            document.getElementById('searchInput').placeholder = tab === 'quotations'
+                ? 'Search quotations...' : 'Search invoices...';
+
+            // Update filter options
+            const filter = document.getElementById('statusFilter');
+            if (tab === 'quotations') {
+                filter.innerHTML = '<option value="all">All Statuses</option><option value="draft">Draft</option><option value="sent">Sent</option><option value="accepted">Accepted</option><option value="rejected">Rejected</option>';
+            } else {
+                filter.innerHTML = '<option value="all">All Payments</option><option value="unpaid">Unpaid</option><option value="partial">Partial</option><option value="paid">Paid</option>';
+            }
+
+            loadData();
+        }
+
+        // ── Ripple Effect ──
+        function handleCreate(e) {
+            const btn = e.currentTarget;
+            const rect = btn.getBoundingClientRect();
+            const ripple = document.createElement('span');
+            ripple.className = 'ripple';
+            const size = Math.max(rect.width, rect.height);
+            ripple.style.width = ripple.style.height = size + 'px';
+            ripple.style.left = (e.clientX - rect.left - size/2) + 'px';
+            ripple.style.top = (e.clientY - rect.top - size/2) + 'px';
+            btn.appendChild(ripple);
+            setTimeout(() => ripple.remove(), 600);
+            setTimeout(() => { window.location.href = '/app/catalog'; }, 300);
+        }
+
+        // ── Skeleton Loader ──
+        function showSkeleton() {
+            const tbody = document.getElementById('tableBody');
+            let html = '';
+            for (let i = 0; i < 6; i++) {
+                html += `<tr class="skeleton-row">
+                    <td><span class="skeleton w-md"></span></td>
+                    <td><div class="skeleton-buyer"><span class="skeleton w-avatar"></span><div class="skeleton-buyer-info"><span class="skeleton w-lg"></span><span class="skeleton w-md"></span></div></div></td>
+                    <td><span class="skeleton w-sm"></span></td>
+                    <td><span class="skeleton w-badge"></span></td>
+                    <td><span class="skeleton w-md"></span></td>
+                    <td><div class="skeleton-actions"><span class="skeleton"></span><span class="skeleton"></span></div></td>
+                </tr>`;
+            }
+            tbody.innerHTML = html;
+        }
+
+        // ── Data Loading ──
+        async function loadData() {
+            showSkeleton();
+
+            try {
+                const url = currentTab === 'quotations' ? '/api/quotations?per_page=100' : '/api/invoices?per_page=100';
+                const res = await apiCall('GET', url);
+                if (!res) return;
+                const data = await res.json();
+                currentData = currentTab === 'quotations' ? (data.quotations || []) : (data.invoices || []);
+
+                // Cache and update tab counts
+                if (currentTab === 'quotations') {
+                    quotationsCache = currentData;
+                    document.getElementById('tabCountQt').textContent = currentData.length;
+                } else {
+                    invoicesCache = currentData;
+                    document.getElementById('tabCountInv').textContent = currentData.length;
+                }
+
+                renderStats(currentData);
+                filterTable();
+
+                // Prefetch other tab count
+                prefetchOtherTab();
+            } catch(e) {
+                document.getElementById('tableBody').innerHTML = `
+                    <tr><td colspan="6">
+                        <div class="empty-state">
+                            <div class="empty-illustration"><div class="circle"><i class="fas fa-exclamation-triangle"></i></div></div>
+                            <h3>Failed to load data</h3>
+                            <p>Something went wrong. Please try again.</p>
+                            <button class="btn-create" onclick="loadData()"><i class="fas fa-redo"></i> Retry</button>
+                        </div>
+                    </td></tr>`;
+            }
+        }
+
+        async function prefetchOtherTab() {
+            try {
+                if (currentTab === 'quotations' && !invoicesCache) {
+                    const res = await apiCall('GET', '/api/invoices?per_page=100');
+                    if (res) { const d = await res.json(); invoicesCache = d.invoices || []; document.getElementById('tabCountInv').textContent = invoicesCache.length; }
+                } else if (currentTab === 'invoices' && !quotationsCache) {
+                    const res = await apiCall('GET', '/api/quotations?per_page=100');
+                    if (res) { const d = await res.json(); quotationsCache = d.quotations || []; document.getElementById('tabCountQt').textContent = quotationsCache.length; }
+                }
+            } catch(e) {}
+        }
+
+        // ── Animated Stats ──
+        function renderStats(data) {
+            const container = document.getElementById('statsRow');
+            let pills = [];
+
+            if (currentTab === 'quotations') {
+                const total = data.length;
+                const draft = data.filter(d => d.status === 'draft').length;
+                const sent = data.filter(d => d.status === 'sent').length;
+                const accepted = data.filter(d => d.status === 'accepted').length;
+                const amt = data.reduce((s, d) => s + (d.total_amount || 0), 0);
+
+                pills = [
+                    { icon: 'fa-file-invoice', label: 'Total Quotes', val: total, id: 'st0', color: 'var(--accent)', bg: 'rgba(233,69,96,0.1)' },
+                    { icon: 'fa-pencil-alt', label: 'Draft', val: draft, id: 'st1', color: '#6c757d', bg: 'rgba(108,117,125,0.1)' },
+                    { icon: 'fa-paper-plane', label: 'Sent', val: sent, id: 'st2', color: '#3b82f6', bg: 'rgba(59,130,246,0.1)' },
+                    { icon: 'fa-check-circle', label: 'Accepted', val: accepted, id: 'st3', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+                    { icon: 'fa-rupee-sign', label: 'Pipeline Value', val: null, id: 'st4', color: '#8b5cf6', bg: 'rgba(139,92,246,0.1)', currency: amt },
+                ];
+            } else {
+                const total = data.length;
+                const unpaid = data.filter(d => d.payment_status === 'unpaid').length;
+                const paid = data.filter(d => d.payment_status === 'paid').length;
+                const paidAmt = data.filter(d => d.payment_status === 'paid').reduce((s, d) => s + (d.total_amount || 0), 0);
+                const pendingAmt = data.filter(d => d.payment_status !== 'paid').reduce((s, d) => s + (d.total_amount || 0), 0);
+
+                pills = [
+                    { icon: 'fa-receipt', label: 'Total Invoices', val: total, id: 'st0', color: 'var(--accent)', bg: 'rgba(233,69,96,0.1)' },
+                    { icon: 'fa-clock', label: 'Unpaid', val: unpaid, id: 'st1', color: '#ca8a04', bg: 'rgba(234,179,8,0.1)' },
+                    { icon: 'fa-check-double', label: 'Paid', val: paid, id: 'st2', color: '#22c55e', bg: 'rgba(34,197,94,0.1)' },
+                    { icon: 'fa-money-bill-wave', label: 'Collected', val: null, id: 'st3', color: '#22c55e', bg: 'rgba(34,197,94,0.1)', currency: paidAmt },
+                    { icon: 'fa-exclamation-circle', label: 'Pending', val: null, id: 'st4', color: '#ef4444', bg: 'rgba(239,68,68,0.1)', currency: pendingAmt },
+                ];
+            }
+
+            container.innerHTML = pills.map((p, i) => `
+                <div class="stat-glow-pill" style="animation: rowSlideIn 0.4s ease ${i*0.06}s both;">
+                    <div class="stat-icon-wrap" style="color:${p.color};background:${p.bg};">
+                        <i class="fas ${p.icon}"></i>
+                    </div>
+                    <div class="stat-info">
+                        <div class="val" id="${p.id}">${p.currency !== undefined ? '₹0' : '0'}</div>
+                        <div class="lbl">${p.label}</div>
+                    </div>
+                </div>
+            `).join('');
+
+            // Animate counters
+            pills.forEach(p => {
+                const el = document.getElementById(p.id);
+                if (p.currency !== undefined) {
+                    animateCurrency(el, p.currency);
+                } else {
+                    animateCounter(el, p.val);
+                }
+            });
+        }
+
+        function animateCurrency(el, target) {
+            if (!el) return;
+            const duration = 800;
+            const start = performance.now();
+            function tick(now) {
+                const elapsed = now - start;
+                const progress = Math.min(elapsed / duration, 1);
+                const eased = 1 - Math.pow(1 - progress, 3);
+                const current = Math.round(target * eased);
+                el.textContent = '₹' + current.toLocaleString('en-IN', { maximumFractionDigits: 0 });
+                if (progress < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        }
+
+        // ── Sorting ──
+        function sortTable(col) {
+            const ths = document.querySelectorAll('.premium-table th');
+            ths.forEach(th => { th.classList.remove('sorted', 'desc'); });
+
+            if (sortCol === col) { sortAsc = !sortAsc; }
+            else { sortCol = col; sortAsc = true; }
+
+            // Highlight sorted column
+            const colIndex = { id: 0, buyer: 1, amount: 2, status: 3, date: 4 }[col];
+            if (colIndex !== undefined && ths[colIndex]) {
+                ths[colIndex].classList.add('sorted');
+                if (!sortAsc) ths[colIndex].classList.add('desc');
+            }
+
+            filterTable();
+        }
+
+        // ── Filtering & Rendering ──
+        function filterTable() {
+            const search = document.getElementById('searchInput').value.toLowerCase();
+            const status = document.getElementById('statusFilter').value;
+
+            let filtered = currentData.filter(item => {
+                const num = (item.quotation_number || item.invoice_number || '').toLowerCase();
+                const buyer = (item.buyer_name || '').toLowerCase();
+                const comp = (item.buyer_company || '').toLowerCase();
+                const st = currentTab === 'quotations' ? item.status : item.payment_status;
+
+                const matchSearch = !search || num.includes(search) || buyer.includes(search) || comp.includes(search);
+                const matchStatus = status === 'all' || st === status;
+                return matchSearch && matchStatus;
+            });
+
+            filtered.sort((a, b) => {
+                let valA, valB;
+                if (sortCol === 'id') { valA = a.quotation_number || a.invoice_number || ''; valB = b.quotation_number || b.invoice_number || ''; }
+                else if (sortCol === 'buyer') { valA = a.buyer_name || ''; valB = b.buyer_name || ''; }
+                else if (sortCol === 'amount') { valA = a.total_amount || 0; valB = b.total_amount || 0; }
+                else if (sortCol === 'status') { valA = a.status || a.payment_status || ''; valB = b.status || b.payment_status || ''; }
+                else { valA = new Date(a.created_at).getTime() || 0; valB = new Date(b.created_at).getTime() || 0; }
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
+                return 0;
+            });
+
+            renderTableRows(filtered);
+        }
+
+        function getInitials(name) {
+            if (!name) return '?';
+            return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+        }
+
+        function renderTableRows(data) {
+            const tbody = document.getElementById('tableBody');
+
+            if (!data.length) {
+                const noun = currentTab === 'quotations' ? 'quotations' : 'invoices';
+                const icon = currentTab === 'quotations' ? 'fa-file-invoice' : 'fa-receipt';
+                tbody.innerHTML = `<tr><td colspan="6">
+                    <div class="empty-state">
+                        <div class="empty-illustration">
+                            <div class="circle"><i class="fas ${icon}"></i></div>
+                        </div>
+                        <h3>No ${noun} yet</h3>
+                        <p>Create your first ${noun.slice(0,-1)} to start tracking your business transactions.</p>
+                        <button class="btn-create" onclick="window.location.href='/app/catalog'">
+                            <i class="fas fa-plus"></i> Create ${noun.slice(0,-1)}
+                        </button>
+                    </div>
+                </td></tr>`;
+                return;
+            }
+
+            tbody.innerHTML = data.map((item, i) => {
+                const isQt = currentTab === 'quotations';
+                const id = item.id;
+                const num = item.quotation_number || item.invoice_number || '';
+                const amt = item.total_amount || 0;
+                const status = isQt ? item.status : item.payment_status;
+                const buyerName = item.buyer_name || 'Unknown';
+                const buyerCompany = item.buyer_company || '';
+                const initials = getInitials(buyerName);
+                const dateObj = item.created_at ? new Date(item.created_at) : null;
+                const dateStr = dateObj ? formatDate(item.created_at) : '—';
+                const timeAgo = dateObj ? getRelativeTime(dateObj) : '';
+
+                // Build action buttons
+                let actions = `<button class="btn-act" title="Download PDF" onclick="downloadPdf('${id}', '${escapeHtml(num)}')"><i class="fas fa-file-pdf"></i></button>`;
+
+                if (isQt && status === 'draft') {
+                    actions += `<button class="btn-act btn-blue" title="Send" onclick="sendQuotation('${id}')"><i class="fas fa-paper-plane"></i></button>`;
+                }
+                if (isQt && status === 'sent') {
+                    actions += `<button class="btn-act btn-green" title="Mark Accepted" onclick="updateStatus('${id}', 'accepted')"><i class="fas fa-check"></i></button>`;
+                }
+                if (isQt && status === 'accepted') {
+                    actions += `<button class="btn-act btn-green" title="Create Invoice" onclick="createInvoice('${id}')"><i class="fas fa-receipt"></i></button>`;
+                }
+                if (!isQt) {
+                    actions += `<button class="btn-act btn-blue" title="Update Payment" onclick="openPayment('${id}', '${status}')"><i class="fas fa-credit-card"></i></button>`;
+                }
+
+                return `
+                <tr class="row-enter" style="animation-delay:${i * 0.04}s">
+                    <td><strong style="color:var(--text-primary);font-weight:700;">${escapeHtml(num)}</strong></td>
+                    <td>
+                        <div class="buyer-col">
+                            <div class="buyer-avatar">${initials}</div>
+                            <div class="buyer-info">
+                                <strong>${escapeHtml(buyerName)}</strong>
+                                <span>${escapeHtml(buyerCompany)}</span>
+                            </div>
+                        </div>
+                    </td>
+                    <td><span class="amt-val">₹${amt.toLocaleString('en-IN', { maximumFractionDigits: 2 })}</span></td>
+                    <td><span class="glow-badge glow-${status}"><span class="dot"></span>${status}</span></td>
+                    <td><div class="date-col">${dateStr}<small>${timeAgo}</small></div></td>
+                    <td><div class="action-cell">${actions}</div></td>
+                </tr>`;
+            }).join('');
+        }
+
+        function getRelativeTime(date) {
+            const now = new Date();
+            const diff = now - date;
+            const mins = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            if (mins < 1) return 'just now';
+            if (mins < 60) return mins + 'm ago';
+            if (hours < 24) return hours + 'h ago';
+            if (days < 7) return days + 'd ago';
+            if (days < 30) return Math.floor(days/7) + 'w ago';
+            return Math.floor(days/30) + 'mo ago';
+        }
+
+        // ── Actions ──
+        async function updateStatus(id, st) {
+            try {
+                const res = await apiCall('PUT', `/api/quotations/${id}/status`, { status: st });
+                if (res && res.ok) { showToast('Status updated', 'success'); quotationsCache = null; loadData(); }
+            } catch(e) { showToast('Failed to update', 'error'); }
+        }
+
+        async function sendQuotation(id) {
+            try {
+                const res = await apiCall('POST', `/api/quotations/${id}/send`);
+                if (res && res.ok) { showToast('Quotation sent!', 'success'); quotationsCache = null; loadData(); }
+                else { showToast('Failed to send', 'error'); }
+            } catch(e) { showToast('Failed to send', 'error'); }
+        }
+
+        async function createInvoice(id) {
+            try {
+                const res = await apiCall('POST', '/api/invoices', { quotation_id: id });
+                if (res && res.ok) {
+                    showToast('Invoice created!', 'success');
+                    invoicesCache = null;
+                    switchTab('invoices', document.querySelectorAll('.q-tab-btn')[1]);
+                }
+            } catch(e) { showToast('Failed to create invoice', 'error'); }
+        }
+
+        function openPayment(id, st) {
+            document.getElementById('payInvId').value = id;
+            document.getElementById('payStatusSel').value = st;
+            document.getElementById('paymentModal').style.display = 'flex';
+        }
+
+        function closePaymentModal() {
+            document.getElementById('paymentModal').style.display = 'none';
+        }
+
+        // Close modal on backdrop click
+        document.getElementById('paymentModal').addEventListener('click', function(e) {
+            if (e.target === this) closePaymentModal();
+        });
+
+        async function savePayment() {
+            const id = document.getElementById('payInvId').value;
+            const st = document.getElementById('payStatusSel').value;
+            try {
+                const res = await apiCall('POST', `/api/invoices/${id}/payment`, { payment_status: st });
+                if (res && res.ok) {
+                    showToast('Payment updated', 'success');
+                    closePaymentModal();
+                    invoicesCache = null;
+                    loadData();
+                }
+            } catch(e) { showToast('Failed to update payment', 'error'); }
+        }
+
+        async function downloadPdf(id, num) {
+            showToast('Generating PDF...', 'info');
+            try {
+                const url = currentTab === 'quotations' ? `/api/quotations/${id}/pdf` : `/api/invoices/${id}/pdf`;
+                const token = localStorage.getItem('token');
+                const res = await fetch(`${window.location.origin}${url}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const blob = new Blob([await res.text()], { type: 'text/html' });
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `${currentTab.slice(0,-1)}-${num}.html`;
+                a.click();
+                URL.revokeObjectURL(a.href);
+                showToast('Downloaded!', 'success');
+            } catch(e) { showToast('Download failed', 'error'); }
+        }
+
+        // ── Boot ──
+        if (authGuard()) {
+            initLeadFlow();
+            showSkeleton();
+            loadData();
+
+            if (new URLSearchParams(window.location.search).get('action') === 'new') {
+                window.location.href = '/app/catalog';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,634 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pipeline — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <style>
+        /* ── Funnel Bar ── */
+        .pipeline-funnel-wrap {
+            margin-bottom: 24px;
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 20px 24px;
+            box-shadow: var(--shadow-sm);
+        }
+        .funnel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        .funnel-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .funnel-title i { color: var(--accent); }
+        .funnel-stats {
+            display: flex;
+            gap: 20px;
+        }
+        .funnel-stat-item {
+            text-align: right;
+        }
+        .funnel-stat-value {
+            font-size: 18px;
+            font-weight: 800;
+            color: var(--text-primary);
+        }
+        .funnel-stat-label {
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+        }
+
+        .funnel-bar-container {
+            display: flex;
+            height: 12px;
+            border-radius: 6px;
+            overflow: hidden;
+            background: var(--bg-tertiary);
+            gap: 2px;
+        }
+        .funnel-segment {
+            height: 100%;
+            transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+        .funnel-segment:hover { opacity: 0.85; }
+        
+        .funnel-labels {
+            display: flex;
+            margin-top: 8px;
+            gap: 2px;
+        }
+        .funnel-label {
+            font-size: 11px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Colors mapping */
+        .color-new { background: linear-gradient(135deg, #007bff, #0056b3); }
+        .color-contacted { background: linear-gradient(135deg, #fd7e14, #d35400); }
+        .color-qualified { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
+        .color-proposal { background: linear-gradient(135deg, #0f3460, #1a1a2e); }
+        .color-negotiation { background: linear-gradient(135deg, #ffc107, #ff9800); }
+        .color-won { background: linear-gradient(135deg, #28a745, #1e7e34); }
+        .color-lost { background: linear-gradient(135deg, #dc3545, #a71d2a); }
+
+        .text-new { color: #007bff; }
+        .text-contacted { color: #fd7e14; }
+        .text-qualified { color: #9c27b0; }
+        .text-proposal { color: #0f3460; }
+        .text-negotiation { color: #ff9800; }
+        .text-won { color: #28a745; }
+        .text-lost { color: #dc3545; }
+
+        /* ── Kanban Board ── */
+        .kanban-container {
+            display: flex;
+            gap: 16px;
+            overflow-x: auto;
+            padding-bottom: 24px;
+            min-height: calc(100vh - 280px);
+            align-items: flex-start;
+        }
+
+        .kanban-column {
+            min-width: 300px;
+            width: 300px;
+            flex-shrink: 0;
+            background: var(--bg-tertiary);
+            border-radius: var(--radius);
+            display: flex;
+            flex-direction: column;
+            max-height: calc(100vh - 280px);
+            border: 1px solid var(--border-secondary);
+            transition: all 0.2s;
+        }
+
+        .kanban-column.drag-over {
+            border-color: var(--accent);
+            background: rgba(233,69,96,0.05);
+            box-shadow: 0 0 0 2px rgba(233,69,96,0.3) inset;
+        }
+
+        .column-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--border-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            border-radius: var(--radius) var(--radius) 0 0;
+        }
+        
+        /* Gradient headers based on stage */
+        .kanban-column[data-stage="new"] .column-header { background: linear-gradient(135deg, rgba(0,123,255,0.1), rgba(0,123,255,0.02)); border-top: 3px solid #007bff; }
+        .kanban-column[data-stage="contacted"] .column-header { background: linear-gradient(135deg, rgba(253,126,20,0.1), rgba(253,126,20,0.02)); border-top: 3px solid #fd7e14; }
+        .kanban-column[data-stage="qualified"] .column-header { background: linear-gradient(135deg, rgba(156,39,176,0.1), rgba(156,39,176,0.02)); border-top: 3px solid #9c27b0; }
+        .kanban-column[data-stage="proposal"] .column-header { background: linear-gradient(135deg, rgba(15,52,96,0.1), rgba(15,52,96,0.02)); border-top: 3px solid #0f3460; }
+        .kanban-column[data-stage="negotiation"] .column-header { background: linear-gradient(135deg, rgba(255,193,7,0.1), rgba(255,193,7,0.02)); border-top: 3px solid #ffc107; }
+        .kanban-column[data-stage="won"] .column-header { background: linear-gradient(135deg, rgba(40,167,69,0.1), rgba(40,167,69,0.02)); border-top: 3px solid #28a745; }
+        .kanban-column[data-stage="lost"] .column-header { background: linear-gradient(135deg, rgba(220,53,69,0.1), rgba(220,53,69,0.02)); border-top: 3px solid #dc3545; }
+
+        .column-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .column-title h3 {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-transform: capitalize;
+            letter-spacing: 0.3px;
+        }
+        .column-count {
+            background: var(--bg-card);
+            color: var(--text-primary);
+            font-size: 11px;
+            font-weight: 800;
+            padding: 3px 8px;
+            border-radius: 12px;
+            min-width: 24px;
+            text-align: center;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-primary);
+        }
+        .column-value {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            background: var(--bg-card);
+            padding: 4px 10px;
+            border-radius: 6px;
+            border: 1px solid var(--border-primary);
+        }
+
+        .column-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        /* ── Kanban Card ── */
+        .kanban-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(8px);
+            border: 1px solid var(--border-primary);
+            border-radius: var(--radius-sm);
+            padding: 16px;
+            cursor: grab;
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+            position: relative;
+            overflow: hidden;
+        }
+        .kanban-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--border-secondary);
+            transition: width 0.2s, background 0.2s;
+        }
+        
+        .kanban-column[data-stage="new"] .kanban-card::before { background: #007bff; }
+        .kanban-column[data-stage="contacted"] .kanban-card::before { background: #fd7e14; }
+        .kanban-column[data-stage="qualified"] .kanban-card::before { background: #9c27b0; }
+        .kanban-column[data-stage="proposal"] .kanban-card::before { background: #0f3460; }
+        .kanban-column[data-stage="negotiation"] .kanban-card::before { background: #ffc107; }
+        .kanban-column[data-stage="won"] .kanban-card::before { background: #28a745; }
+        .kanban-column[data-stage="lost"] .kanban-card::before { background: #dc3545; }
+
+        .kanban-card:hover {
+            box-shadow: var(--shadow-md);
+            transform: translateY(-3px);
+            border-color: var(--accent);
+        }
+        .kanban-card:hover::before { width: 5px; }
+        
+        .kanban-card.dragging {
+            opacity: 0.8;
+            transform: scale(1.05) rotate(3deg);
+            box-shadow: var(--shadow-lg);
+            cursor: grabbing;
+            z-index: 100;
+        }
+        
+        .kc-name {
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+            padding-left: 8px;
+        }
+        .kc-company {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            margin-bottom: 10px;
+            padding-left: 8px;
+        }
+        
+        .kc-product {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-tertiary);
+            padding: 5px 10px;
+            border-radius: 6px;
+            display: inline-block;
+            margin-bottom: 12px;
+            margin-left: 8px;
+            max-width: calc(100% - 8px);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border: 1px solid var(--border-secondary);
+        }
+        
+        .kc-deal {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 12px;
+            margin-left: 8px;
+            padding: 6px 10px;
+            background: rgba(40,167,69,0.08);
+            border: 1px dashed rgba(40,167,69,0.3);
+            border-radius: 6px;
+        }
+        .kc-deal i { color: var(--green); font-size: 12px; }
+        .kc-deal-value { font-size: 14px; font-weight: 800; color: var(--green); }
+        
+        .kc-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 8px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-secondary);
+            margin-left: 8px;
+        }
+        .kc-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .kc-actions {
+            display: flex;
+            gap: 6px;
+        }
+        .kc-action-btn {
+            background: var(--bg-tertiary);
+            border: 1px solid var(--border-secondary);
+            cursor: pointer;
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+            transition: all 0.2s;
+            text-decoration: none;
+        }
+        .kc-action-btn:hover { background: var(--accent); color: #fff; border-color: var(--accent); transform: translateY(-2px); }
+        .kc-action-btn.whatsapp:hover { background: #25d366; border-color: #25d366; }
+
+        .column-empty {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 13px;
+            border: 2px dashed var(--border-secondary);
+            border-radius: var(--radius-sm);
+            margin-top: 10px;
+        }
+        .column-empty i { font-size: 32px; margin-bottom: 12px; display: block; opacity: 0.3; }
+
+        /* Skeletons */
+        .skel-card { height: 160px; margin-bottom: 12px; border-radius: var(--radius-sm); }
+        .skel-col { padding: 14px; }
+
+        @media (max-width: 768px) {
+            .kanban-container { padding-bottom: 80px; }
+            .kanban-column { min-width: 280px; width: 280px; }
+            .funnel-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .funnel-stats { width: 100%; justify-content: space-between; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+    <div class="main">
+        <div id="topbarContainer"></div>
+        <div class="content">
+            
+            <!-- ── Funnel Bar ── -->
+            <div class="pipeline-funnel-wrap animate-fade-in-up">
+                <div class="funnel-header">
+                    <div class="funnel-title"><i class="fas fa-filter"></i> Pipeline Funnel</div>
+                    <div class="funnel-stats" id="funnelStats">
+                        <div class="funnel-stat-item">
+                            <div class="funnel-stat-value" id="statTotalVal">0</div>
+                            <div class="funnel-stat-label">Total Leads</div>
+                        </div>
+                        <div class="funnel-stat-item">
+                            <div class="funnel-stat-value" id="statTotalPipe">₹0</div>
+                            <div class="funnel-stat-label">Pipeline Value</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="funnel-bar-container" id="funnelBar">
+                    <div class="skeleton" style="width:100%;height:100%"></div>
+                </div>
+                <div class="funnel-labels" id="funnelLabels"></div>
+            </div>
+
+            <!-- ── Kanban Board ── -->
+            <div class="kanban-container animate-fade-in-up" style="animation-delay:0.1s" id="kanbanBoard">
+                <!-- Skeletons initially -->
+                <div class="kanban-column"><div class="column-header"><div class="skeleton" style="width:100px;height:20px"></div></div><div class="skel-col"><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div></div></div>
+                <div class="kanban-column"><div class="column-header"><div class="skeleton" style="width:100px;height:20px"></div></div><div class="skel-col"><div class="skeleton skel-card"></div></div></div>
+                <div class="kanban-column"><div class="column-header"><div class="skeleton" style="width:100px;height:20px"></div></div><div class="skel-col"><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div><div class="skeleton skel-card"></div></div></div>
+            </div>
+            
+        </div>
+    </div>
+
+    <!-- Lead Detail Slide-out uses generic functions, pipeline will redirect or use custom -->
+    <!-- We will keep it simple here and redirect to lead list or use a basic viewer -->
+    
+    <div id="notifContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+        document.getElementById('sidebarContainer').innerHTML = generateSidebar('pipeline');
+        document.getElementById('topbarContainer').innerHTML = generateTopbar('Pipeline', `
+            <button class="btn btn-outline btn-sm" onclick="loadPipeline()"><i class="fas fa-sync-alt"></i> Refresh</button>
+        `);
+        document.getElementById('notifContainer').innerHTML = generateNotifPanel();
+
+        const STAGES = [
+            { id: 'new', label: 'New', icon: 'fa-inbox', colorClass: 'color-new', textClass: 'text-new' },
+            { id: 'contacted', label: 'Contacted', icon: 'fa-phone', colorClass: 'color-contacted', textClass: 'text-contacted' },
+            { id: 'qualified', label: 'Qualified', icon: 'fa-check-circle', colorClass: 'color-qualified', textClass: 'text-qualified' },
+            { id: 'proposal', label: 'Proposal', icon: 'fa-file-alt', colorClass: 'color-proposal', textClass: 'text-proposal' },
+            { id: 'negotiation', label: 'Negotiation', icon: 'fa-handshake', colorClass: 'color-negotiation', textClass: 'text-negotiation' },
+            { id: 'won', label: 'Won', icon: 'fa-trophy', colorClass: 'color-won', textClass: 'text-won' },
+            { id: 'lost', label: 'Lost', icon: 'fa-times-circle', colorClass: 'color-lost', textClass: 'text-lost' }
+        ];
+
+        let pipelineData = {};
+        
+        if (authGuard()) {
+            initLeadFlow();
+            loadPipeline();
+        }
+
+        async function loadPipeline() {
+            try {
+                const res = await apiCall('GET', '/api/leads/pipeline');
+                if (!res) return;
+                const data = await res.json();
+                
+                // Format might vary. Standardize it:
+                if (data.pipeline) {
+                    pipelineData = data.pipeline;
+                } else {
+                    // Rebuild from flat data if needed
+                    pipelineData = {};
+                    STAGES.forEach(s => pipelineData[s.id] = { leads: [], count: 0, total_value: 0 });
+                    if (data.data || data.leads) {
+                        const list = data.data || data.leads;
+                        list.forEach(l => {
+                            const st = (l.lead_stage || l.stage || 'new').toLowerCase();
+                            if (!pipelineData[st]) pipelineData[st] = { leads: [], count: 0, total_value: 0 };
+                            pipelineData[st].leads.push(l);
+                            pipelineData[st].count++;
+                            pipelineData[st].total_value += (l.deal_value || l.dealValue || 0);
+                        });
+                    }
+                }
+
+                // If summary provided, use it, else calc
+                const summary = data.summary || calcSummary(pipelineData);
+                
+                renderFunnel(summary, pipelineData);
+                renderKanban();
+            } catch (e) {
+                showToast('Failed to load pipeline', 'error');
+                // render empty kanban on fail
+                renderKanban(true);
+            }
+        }
+
+        function calcSummary(pd) {
+            let total_leads = 0;
+            let total_value = 0;
+            Object.values(pd).forEach(stage => {
+                total_leads += stage.count || 0;
+                total_value += stage.total_value || 0;
+            });
+            return { total_leads, total_pipeline_value: total_value };
+        }
+
+        function renderFunnel(summary, pd) {
+            document.getElementById('statTotalVal').textContent = summary.total_leads || 0;
+            document.getElementById('statTotalPipe').textContent = formatCurrency(summary.total_pipeline_value || 0);
+
+            const total = summary.total_leads || 1; // avoid /0
+            
+            let barHtml = '';
+            let labelHtml = '';
+
+            STAGES.forEach(s => {
+                const count = (pd[s.id] && pd[s.id].count) ? pd[s.id].count : 0;
+                const pct = (count / total) * 100;
+                
+                if (count > 0) {
+                    barHtml += `<div class="funnel-segment ${s.colorClass}" style="width: ${pct}%" title="${s.label}: ${count} leads"></div>`;
+                }
+                labelHtml += `<div class="funnel-label" style="width: ${pct}%" title="${s.label}: ${count}">${pct > 5 ? s.label : ''}</div>`;
+            });
+
+            if (!barHtml) {
+                barHtml = `<div class="funnel-segment" style="width: 100%; background: var(--border-secondary);"></div>`;
+                labelHtml = `<div class="funnel-label" style="width: 100%">No data</div>`;
+            }
+
+            document.getElementById('funnelBar').innerHTML = barHtml;
+            document.getElementById('funnelLabels').innerHTML = labelHtml;
+        }
+
+        function renderKanban(isEmpty = false) {
+            const board = document.getElementById('kanbanBoard');
+            
+            board.innerHTML = STAGES.map(stage => {
+                const data = !isEmpty && pipelineData[stage.id] ? pipelineData[stage.id] : { leads: [], count: 0, total_value: 0 };
+                const displayVal = data.total_value > 0 ? formatCurrency(data.total_value) : '₹0';
+                
+                return `
+                <div class="kanban-column" id="col-${stage.id}" data-stage="${stage.id}"
+                     ondragover="onDragOver(event, '${stage.id}')"
+                     ondragleave="onDragLeave(event, '${stage.id}')"
+                     ondrop="onDrop(event, '${stage.id}')">
+                    <div class="column-header">
+                        <div class="column-title">
+                            <h3 class="${stage.textClass}">${stage.label}</h3>
+                            <span class="column-count">${data.count}</span>
+                        </div>
+                        <div class="column-value">${displayVal}</div>
+                    </div>
+                    <div class="column-body" id="body-${stage.id}">
+                        ${data.leads.length ? data.leads.map(l => renderCard(l, stage.id)).join('') : `
+                            <div class="column-empty">
+                                <i class="fas ${stage.icon}"></i>
+                                <div>No leads in ${stage.label}</div>
+                            </div>
+                        `}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function renderCard(lead, stageId) {
+            const id = lead._id || lead.id;
+            const name = escapeHtml(lead.sender_name || lead.name || 'Unknown Lead');
+            const company = escapeHtml(lead.sender_company || lead.company || '');
+            const product = escapeHtml(lead.query_product_name || lead.product || '');
+            const mobile = lead.sender_mobile || lead.mobile || '';
+            const email = lead.sender_email || lead.email || '';
+            const date = lead.query_time || lead.createdAt || lead.date || '';
+            const deal = lead.deal_value || lead.dealValue || 0;
+            
+            return `
+            <div class="kanban-card" draggable="true" id="card-${id}"
+                 data-lead-id="${id}" data-stage="${stageId}"
+                 ondragstart="onDragStart(event, '${id}')"
+                 ondragend="onDragEnd(event)">
+                <div class="kc-name">${name}</div>
+                ${company ? `<div class="kc-company"><i class="far fa-building"></i> ${company}</div>` : ''}
+                
+                ${product ? `<div class="kc-product" title="${product}">${product}</div>` : ''}
+                
+                ${deal > 0 ? `
+                <div class="kc-deal">
+                    <i class="fas fa-rupee-sign"></i>
+                    <div class="kc-deal-value">${Number(deal).toLocaleString('en-IN')}</div>
+                </div>` : ''}
+                
+                <div class="kc-footer">
+                    <div class="kc-date">
+                        <i class="far fa-clock"></i> ${formatDate(date)}
+                    </div>
+                    <div class="kc-actions">
+                        ${mobile ? `
+                            <a class="kc-action-btn" href="tel:${mobile}" onclick="event.stopPropagation()" title="Call"><i class="fas fa-phone"></i></a>
+                            <a class="kc-action-btn whatsapp" href="https://wa.me/91${mobile.replace(/[^\d]/g,'')}" onclick="event.stopPropagation()" target="_blank" title="WhatsApp"><i class="fab fa-whatsapp"></i></a>
+                        ` : ''}
+                        ${email ? `<a class="kc-action-btn" href="mailto:${email}" onclick="event.stopPropagation()" title="Email"><i class="fas fa-envelope"></i></a>` : ''}
+                    </div>
+                </div>
+            </div>`;
+        }
+
+        // ─── Drag & Drop ──────────────────────────────────────────────
+        let draggedId = null;
+
+        function onDragStart(e, leadId) {
+            draggedId = leadId;
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('text/plain', leadId);
+            setTimeout(() => e.target.classList.add('dragging'), 0);
+        }
+
+        function onDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.kanban-column').forEach(c => c.classList.remove('drag-over'));
+            draggedId = null;
+        }
+
+        function onDragOver(e, stage) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            document.getElementById(`col-${stage}`).classList.add('drag-over');
+        }
+
+        function onDragLeave(e, stage) {
+            document.getElementById(`col-${stage}`).classList.remove('drag-over');
+        }
+
+        async function onDrop(e, newStage) {
+            e.preventDefault();
+            document.getElementById(`col-${newStage}`).classList.remove('drag-over');
+            
+            const leadId = draggedId || e.dataTransfer.getData('text/plain');
+            if (!leadId) return;
+
+            // Find origin stage
+            const cardEl = document.getElementById(`card-${leadId}`);
+            if (!cardEl) return;
+            const oldStage = cardEl.getAttribute('data-stage');
+            
+            if (oldStage === newStage) return; // No change
+
+            // Optimistic UI update
+            const newColBody = document.getElementById(`body-${newStage}`);
+            cardEl.setAttribute('data-stage', newStage);
+            
+            // Remove empty state from new col if exists
+            const emptyState = newColBody.querySelector('.column-empty');
+            if (emptyState) emptyState.remove();
+            
+            newColBody.prepend(cardEl);
+
+            try {
+                showToast(`Moving to ${newStage}...`, 'info');
+                // Map API stage format if needed (capitalize first letter usually)
+                const mappedStage = newStage.charAt(0).toUpperCase() + newStage.slice(1);
+                const res = await apiCall('PUT', `/api/leads/${leadId}/stage`, { stage: mappedStage });
+                if (!res || res.status >= 400) throw new Error('Failed');
+                
+                showToast(`Moved to ${mappedStage}`, 'success');
+                // Refresh data to update counts and pipeline values accurately
+                loadPipeline(); 
+            } catch (err) {
+                showToast('Failed to update stage', 'error');
+                loadPipeline(); // Revert on failure
+            }
+        }
+    </script>
+</body>
+</html>

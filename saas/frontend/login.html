@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — LeadFlow CRM</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/static/shared.css">
+    <style>
+        /* ═══ Override shared body for auth pages ═══ */
+        body {
+            display: block;
+            min-height: 100vh;
+            background: #0a0a1a;
+            overflow-x: hidden;
+        }
+
+        /* ═══ Animated Gradient Mesh Background ═══ */
+        .auth-wrapper {
+            display: flex;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Left Panel — Animated gradient brand side */
+        .auth-brand {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            padding: 60px 40px;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e, #e94560, #0f3460);
+            background-size: 400% 400%;
+            animation: gradientMesh 15s ease infinite;
+        }
+
+        @keyframes gradientMesh {
+            0% { background-position: 0% 50%; }
+            25% { background-position: 50% 0%; }
+            50% { background-position: 100% 50%; }
+            75% { background-position: 50% 100%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Floating orbs on left */
+        .auth-brand::before,
+        .auth-brand::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+            animation: orbFloat 8s ease-in-out infinite;
+        }
+        .auth-brand::before {
+            width: 400px; height: 400px;
+            background: #e94560;
+            top: -100px; left: -100px;
+        }
+        .auth-brand::after {
+            width: 300px; height: 300px;
+            background: #007bff;
+            bottom: -80px; right: -80px;
+            animation-delay: -4s;
+            animation-direction: reverse;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.1); }
+            66% { transform: translate(-20px, 30px) scale(0.95); }
+        }
+
+        .brand-content {
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            max-width: 420px;
+        }
+
+        .brand-logo {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 80px; height: 80px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+        }
+
+        .brand-content h1 {
+            font-size: 2.4rem;
+            font-weight: 900;
+            color: #fff;
+            line-height: 1.2;
+            margin-bottom: 16px;
+            letter-spacing: -0.02em;
+        }
+
+        .brand-content h1 span {
+            background: linear-gradient(135deg, #ff6b81, #ffd700);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .brand-content p {
+            font-size: 1.1rem;
+            color: rgba(255,255,255,0.7);
+            line-height: 1.7;
+            margin-bottom: 32px;
+        }
+
+        .brand-features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            text-align: left;
+        }
+
+        .brand-feature {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: rgba(255,255,255,0.85);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .brand-feature i {
+            width: 32px; height: 32px;
+            background: rgba(255,255,255,0.12);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            color: #ffd700;
+            flex-shrink: 0;
+        }
+
+        /* Right Panel — Glassmorphism form */
+        .auth-form-panel {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            position: relative;
+            background: #0d0d1f;
+        }
+
+        /* Subtle grid pattern on right */
+        .auth-form-panel::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background-image:
+                radial-gradient(circle at 1px 1px, rgba(255,255,255,0.03) 1px, transparent 0);
+            background-size: 40px 40px;
+        }
+
+        .glass-card {
+            width: 100%;
+            max-width: 440px;
+            background: rgba(255,255,255,0.04);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 24px;
+            padding: 48px 40px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 30px 80px rgba(0,0,0,0.4);
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: -1px; left: 20%; right: 20%;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(233,69,96,0.6), transparent);
+            border-radius: 2px;
+        }
+
+        .form-header {
+            text-align: center;
+            margin-bottom: 36px;
+        }
+
+        .form-header h2 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #fff;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .form-header p {
+            color: rgba(255,255,255,0.5);
+            font-size: 0.95rem;
+        }
+
+        /* ═══ Floating Label Inputs ═══ */
+        .float-group {
+            position: relative;
+            margin-bottom: 24px;
+        }
+
+        .float-group input {
+            width: 100%;
+            padding: 18px 16px 8px 48px;
+            background: rgba(255,255,255,0.05);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            border-radius: 14px;
+            color: #fff;
+            font-size: 15px;
+            font-family: 'Inter', sans-serif;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .float-group input::placeholder { color: transparent; }
+
+        .float-group input:focus {
+            border-color: var(--accent);
+            background: rgba(233,69,96,0.04);
+            box-shadow: 0 0 0 4px rgba(233,69,96,0.1), 0 0 20px rgba(233,69,96,0.05);
+        }
+
+        .float-group .field-icon {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.3);
+            font-size: 15px;
+            transition: color 0.3s;
+            pointer-events: none;
+        }
+
+        .float-group input:focus ~ .field-icon {
+            color: var(--accent);
+        }
+
+        .float-group label {
+            position: absolute;
+            left: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: rgba(255,255,255,0.4);
+            font-size: 14px;
+            font-weight: 500;
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.4,0,0.2,1);
+        }
+
+        .float-group input:focus ~ label,
+        .float-group input:not(:placeholder-shown) ~ label {
+            top: 12px;
+            transform: translateY(0);
+            font-size: 10px;
+            color: var(--accent);
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-weight: 600;
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: rgba(255,255,255,0.3);
+            font-size: 15px;
+            padding: 4px;
+            transition: color 0.2s;
+        }
+        .toggle-password:hover { color: rgba(255,255,255,0.7); }
+
+        /* ═══ Form Options ═══ */
+        .form-options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .form-options label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .form-options label input[type="checkbox"] {
+            accent-color: var(--accent);
+            width: 16px; height: 16px;
+        }
+
+        .form-options a {
+            color: var(--accent);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .form-options a:hover { color: var(--accent-light); }
+
+        /* ═══ Gradient Button ═══ */
+        .btn-gradient {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, var(--accent), #ff6b81, var(--accent));
+            background-size: 200% 200%;
+            color: #fff;
+            border: none;
+            border-radius: 14px;
+            font-family: 'Inter', sans-serif;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-gradient:hover {
+            background-position: 100% 0;
+            transform: translateY(-2px);
+            box-shadow: 0 12px 35px rgba(233,69,96,0.4);
+        }
+
+        .btn-gradient:active { transform: translateY(0); }
+
+        .btn-gradient:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-gradient .spinner {
+            display: none;
+            width: 20px; height: 20px;
+            border: 2.5px solid rgba(255,255,255,0.3);
+            border-top-color: #fff;
+            border-radius: 50%;
+            animation: spin 0.6s linear infinite;
+        }
+
+        .btn-gradient.loading .spinner { display: inline-block; }
+        .btn-gradient.loading .btn-text { display: none; }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ═══ Error Message ═══ */
+        .error-message {
+            background: rgba(220,53,69,0.1);
+            border: 1px solid rgba(220,53,69,0.2);
+            color: #ff6b81;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 13px;
+            margin-bottom: 20px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            backdrop-filter: blur(10px);
+        }
+        .error-message.show { display: flex; }
+
+        /* ═══ Shake Animation ═══ */
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-6px); }
+            20%, 40%, 60%, 80% { transform: translateX(6px); }
+        }
+        .shake { animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both; }
+
+        /* ═══ Bottom Link ═══ */
+        .auth-link {
+            text-align: center;
+            margin-top: 28px;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+
+        .auth-link a {
+            color: var(--accent);
+            font-weight: 700;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .auth-link a:hover { color: var(--accent-light); text-decoration: underline; }
+
+        /* ═══ Toast override for dark bg ═══ */
+        .toast-container { position: fixed; top: 24px; right: 24px; z-index: 9999; }
+
+        /* ═══ Responsive ═══ */
+        @media (max-width: 960px) {
+            .auth-brand { display: none; }
+            .auth-form-panel { padding: 24px 20px; }
+            .glass-card { padding: 36px 28px; }
+        }
+
+        @media (max-width: 480px) {
+            .glass-card { padding: 32px 20px; border-radius: 20px; }
+            .form-header h2 { font-size: 1.5rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-wrapper">
+        <!-- Left Brand Panel -->
+        <div class="auth-brand">
+            <div class="brand-content">
+                <div class="brand-logo">
+                    <i class="fas fa-bolt"></i>
+                </div>
+                <h1>Welcome back to <span>LeadFlow</span></h1>
+                <p>AI-powered lead management for IndiaMART sellers. Automate, score, and close deals faster.</p>
+                <div class="brand-features">
+                    <div class="brand-feature">
+                        <i class="fas fa-sync-alt"></i>
+                        Auto-sync leads every 5 minutes
+                    </div>
+                    <div class="brand-feature">
+                        <i class="fas fa-robot"></i>
+                        AI-powered auto-replies
+                    </div>
+                    <div class="brand-feature">
+                        <i class="fas fa-chart-line"></i>
+                        Smart lead scoring & analytics
+                    </div>
+                    <div class="brand-feature">
+                        <i class="fas fa-shield-alt"></i>
+                        Enterprise-grade security
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Form Panel -->
+        <div class="auth-form-panel">
+            <div class="glass-card">
+                <div class="form-header">
+                    <h2>Sign in</h2>
+                    <p>Enter your credentials to continue</p>
+                </div>
+
+                <div class="error-message" id="errorMsg">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <span id="errorText"></span>
+                </div>
+
+                <form id="loginForm" onsubmit="handleLogin(event)" novalidate>
+                    <div class="float-group">
+                        <input type="email" id="email" placeholder="Email" required autocomplete="email">
+                        <i class="fas fa-envelope field-icon"></i>
+                        <label for="email">Email Address</label>
+                    </div>
+
+                    <div class="float-group">
+                        <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+                        <i class="fas fa-lock field-icon"></i>
+                        <label for="password">Password</label>
+                        <button type="button" class="toggle-password" onclick="togglePassword()">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+
+                    <div class="form-options">
+                        <label>
+                            <input type="checkbox" id="remember"> Remember me
+                        </label>
+                        <a href="#">Forgot password?</a>
+                    </div>
+
+                    <button type="submit" class="btn-gradient" id="loginBtn">
+                        <span class="btn-text">Sign In</span>
+                        <span class="spinner"></span>
+                    </button>
+                </form>
+
+                <div class="auth-link">
+                    Don't have an account? <a href="signup.html">Create one</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+        // Redirect if already logged in (no authGuard call)
+        (function() {
+            const token = localStorage.getItem('token');
+            if (token) window.location.href = '/app/dashboard';
+        })();
+
+        function togglePassword() {
+            const input = document.getElementById('password');
+            const icon = document.getElementById('eyeIcon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        function showError(msg) {
+            const el = document.getElementById('errorMsg');
+            document.getElementById('errorText').textContent = msg;
+            el.classList.add('show');
+            // Shake the form card
+            const card = document.querySelector('.glass-card');
+            card.classList.remove('shake');
+            void card.offsetWidth; // reflow
+            card.classList.add('shake');
+        }
+
+        function hideError() {
+            document.getElementById('errorMsg').classList.remove('show');
+        }
+
+        async function handleLogin(e) {
+            e.preventDefault();
+            hideError();
+
+            const btn = document.getElementById('loginBtn');
+            const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
+
+            if (!email || !password) {
+                showError('Please fill in all fields.');
+                return;
+            }
+
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                const res = await fetch(`${API_BASE}/api/auth/login`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await res.json();
+
+                if (!res.ok) {
+                    throw new Error(data.detail || data.message || 'Invalid email or password');
+                }
+
+                localStorage.setItem('token', data.access_token);
+                if (data.refresh_token) localStorage.setItem('refresh_token', data.refresh_token);
+                if (data.user) localStorage.setItem('user', JSON.stringify(data.user));
+
+                showToast('Login successful! Redirecting...', 'success');
+                setTimeout(() => { window.location.href = '/app/dashboard'; }, 600);
+            } catch (err) {
+                showError(err.message);
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+    </script>
+</body>
+</html>

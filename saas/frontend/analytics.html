@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analytics — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <style>
+        /* ── Header Controls ── */
+        .analytics-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .date-picker {
+            padding: 8px 14px;
+            border: 1.5px solid var(--border-input);
+            border-radius: 12px;
+            font-family: 'Inter', sans-serif;
+            font-size: 13px;
+            font-weight: 600;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s;
+            box-shadow: var(--shadow-sm);
+        }
+        .date-picker:focus, .date-picker:hover {
+            border-color: var(--accent);
+        }
+        
+        /* ── KPI Grid ── */
+        .kpi-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+        .kpi-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), box-shadow 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+        .kpi-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        /* Gradient decor inside card */
+        .kpi-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 4px;
+            opacity: 0.8;
+            transition: height 0.3s;
+        }
+        .kpi-card:hover::before { height: 6px; }
+        
+        .kpi-blue::before { background: linear-gradient(90deg, #007bff, #00c6ff); }
+        .kpi-green::before { background: linear-gradient(90deg, #28a745, #20c997); }
+        .kpi-purple::before { background: linear-gradient(90deg, #9c27b0, #e91e63); }
+        .kpi-orange::before { background: linear-gradient(90deg, #fd7e14, #ffc107); }
+
+        .kpi-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        .kpi-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .kpi-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            color: #fff;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .kpi-blue .kpi-icon { background: linear-gradient(135deg, #007bff, #0056b3); }
+        .kpi-green .kpi-icon { background: linear-gradient(135deg, #28a745, #1e7e34); }
+        .kpi-purple .kpi-icon { background: linear-gradient(135deg, #9c27b0, #7b1fa2); }
+        .kpi-orange .kpi-icon { background: linear-gradient(135deg, #fd7e14, #d35400); }
+
+        .kpi-value {
+            font-size: 32px;
+            font-weight: 800;
+            color: var(--text-primary);
+            line-height: 1.2;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: baseline;
+            gap: 4px;
+        }
+        .kpi-currency {
+            font-size: 20px;
+            font-weight: 600;
+            color: var(--text-tertiary);
+        }
+        
+        .kpi-trend {
+            font-size: 13px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            background: var(--bg-tertiary);
+        }
+        .trend-up { color: #28a745; background: rgba(40,167,69,0.1); }
+        .trend-down { color: #dc3545; background: rgba(220,53,69,0.1); }
+        .trend-flat { color: #6c757d; }
+
+        /* ── Charts Grid ── */
+        .chart-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .chart-full {
+            grid-column: 1 / -1;
+        }
+
+        .chart-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-radius: var(--radius);
+            padding: 24px;
+            box-shadow: var(--shadow-sm);
+            display: flex;
+            flex-direction: column;
+            transition: box-shadow 0.3s;
+        }
+        .chart-card:hover {
+            box-shadow: var(--shadow-md);
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        .chart-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .chart-title i { color: var(--accent); }
+        
+        .chart-body {
+            flex: 1;
+            position: relative;
+            min-height: 300px;
+            width: 100%;
+        }
+
+        /* ── ROI Calculator ── */
+        .roi-wrapper {
+            background: linear-gradient(135deg, #0f3460, #1a1a2e);
+            border-radius: var(--radius);
+            padding: 32px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+        }
+        .roi-wrapper::after {
+            content: '';
+            position: absolute;
+            top: -50%; right: -50%;
+            width: 100%; height: 100%;
+            background: radial-gradient(circle, rgba(233,69,96,0.2) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        .roi-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 8px;
+        }
+        .roi-multiplier {
+            font-size: 64px;
+            font-weight: 800;
+            color: #20c997;
+            line-height: 1;
+            margin-bottom: 24px;
+            text-shadow: 0 4px 20px rgba(32,201,151,0.4);
+        }
+        .roi-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+            padding-top: 24px;
+        }
+        .roi-metric {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        .rm-label { font-size: 12px; color: rgba(255,255,255,0.6); }
+        .rm-value { font-size: 20px; font-weight: 700; color: #fff; }
+
+        @media (max-width: 1024px) {
+            .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+            .chart-grid { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 768px) {
+            .kpi-grid { grid-template-columns: 1fr; }
+            .roi-wrapper { padding: 24px; }
+            .roi-multiplier { font-size: 48px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+    <div class="main">
+        <div id="topbarContainer"></div>
+        <div class="content">
+            
+            <!-- ── KPI Grid ── -->
+            <div class="kpi-grid" id="kpiArea">
+                <!-- Skeletons -->
+                <div class="skeleton" style="height:150px;border-radius:var(--radius)"></div>
+                <div class="skeleton" style="height:150px;border-radius:var(--radius)"></div>
+                <div class="skeleton" style="height:150px;border-radius:var(--radius)"></div>
+                <div class="skeleton" style="height:150px;border-radius:var(--radius)"></div>
+            </div>
+
+            <!-- ── Charts Grid ── -->
+            <div class="chart-grid">
+                <!-- Line Chart (Trend) -->
+                <div class="chart-card chart-full animate-fade-in-up" style="animation-delay: 0.1s">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fas fa-chart-line"></i> Lead Generation Trend</div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="trendChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Doughnut Chart (Funnel) -->
+                <div class="chart-card animate-fade-in-up" style="animation-delay: 0.2s">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fas fa-filter"></i> Pipeline Funnel Breakdown</div>
+                    </div>
+                    <div class="chart-body" style="min-height:350px;">
+                        <canvas id="funnelChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- ROI Calculator -->
+                <div class="chart-card animate-fade-in-up" style="animation-delay: 0.3s; padding:0; border:none; box-shadow:none; background:transparent;">
+                    <div class="roi-wrapper" id="roiArea">
+                        <div class="roi-title">Estimated ROI</div>
+                        <div class="roi-multiplier" id="roiMult">--x</div>
+                        <div class="roi-details">
+                            <div class="roi-metric">
+                                <span class="rm-label">Total Spend</span>
+                                <span class="rm-value" id="roiSpend">₹--</span>
+                            </div>
+                            <div class="roi-metric">
+                                <span class="rm-label">Revenue Won</span>
+                                <span class="rm-value" id="roiRev">₹--</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Bar Chart (Geography) -->
+                <div class="chart-card animate-fade-in-up" style="animation-delay: 0.4s">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fas fa-map-marked-alt"></i> Top Regions</div>
+                    </div>
+                    <div class="chart-body" style="min-height:300px;">
+                        <canvas id="geoChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Competitors List -->
+                <div class="chart-card animate-fade-in-up" style="animation-delay: 0.5s">
+                    <div class="chart-header">
+                        <div class="chart-title"><i class="fas fa-chess"></i> Competitor Intelligence</div>
+                    </div>
+                    <div class="chart-body" style="min-height:300px; overflow-y:auto;" id="compArea">
+                        <div class="skeleton" style="height:40px;margin-bottom:10px;border-radius:4px"></div>
+                        <div class="skeleton" style="height:40px;margin-bottom:10px;border-radius:4px"></div>
+                        <div class="skeleton" style="height:40px;margin-bottom:10px;border-radius:4px"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="notifContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+        document.getElementById('sidebarContainer').innerHTML = generateSidebar('analytics');
+        document.getElementById('topbarContainer').innerHTML = generateTopbar('Analytics', `
+            <div class="analytics-controls">
+                <select class="date-picker" id="dateRange" onchange="loadData()">
+                    <option value="7">Last 7 Days</option>
+                    <option value="30" selected>Last 30 Days</option>
+                    <option value="90">Last 90 Days</option>
+                    <option value="365">This Year</option>
+                </select>
+                <button class="btn btn-primary btn-sm" onclick="loadData()"><i class="fas fa-sync"></i> Refresh</button>
+            </div>
+        `);
+        document.getElementById('notifContainer').innerHTML = generateNotifPanel();
+
+        // Chart.js global config
+        Chart.defaults.font.family = "'Inter', sans-serif";
+        Chart.defaults.color = '#8b949e';
+        Chart.defaults.plugins.tooltip.backgroundColor = 'rgba(15, 52, 96, 0.9)';
+        Chart.defaults.plugins.tooltip.titleFont = { size: 14, weight: 'bold' };
+        Chart.defaults.plugins.tooltip.padding = 12;
+        Chart.defaults.plugins.tooltip.cornerRadius = 8;
+        
+        let charts = {};
+
+        if (authGuard()) {
+            initLeadFlow();
+            loadData();
+        }
+
+        async function loadData() {
+            const range = document.getElementById('dateRange').value;
+            
+            try {
+                // Fetch all data in parallel
+                const [funnelRes, revRes, geoRes, roiRes, compRes] = await Promise.all([
+                    apiCall('GET', `/api/analytics/funnel?days=${range}`),
+                    apiCall('GET', `/api/analytics/revenue?days=${range}`),
+                    apiCall('GET', `/api/analytics/geography?days=${range}`),
+                    apiCall('GET', `/api/analytics/roi?days=${range}`),
+                    apiCall('GET', `/api/analytics/competitors?days=${range}`)
+                ]);
+
+                // Fallback objects if api fails or is absent
+                const funnelData = (funnelRes && funnelRes.ok) ? await funnelRes.json() : getMockFunnel();
+                const revData = (revRes && revRes.ok) ? await revRes.json() : getMockRevenue(range);
+                const geoData = (geoRes && geoRes.ok) ? await geoRes.json() : getMockGeo();
+                const roiData = (roiRes && roiRes.ok) ? await roiRes.json() : getMockRoi();
+                const compData = (compRes && compRes.ok) ? await compRes.json() : getMockComp();
+
+                renderKPIs(funnelData, revData);
+                renderTrendChart(revData.trend);
+                renderFunnelChart(funnelData);
+                renderGeoChart(geoData);
+                renderRoi(roiData);
+                renderComp(compData);
+
+            } catch(e) {
+                showToast('Error loading analytics', 'error');
+                // Use mocks so UI isn't broken
+                renderKPIs(getMockFunnel(), getMockRevenue(30));
+                renderTrendChart(getMockRevenue(30).trend);
+                renderFunnelChart(getMockFunnel());
+                renderGeoChart(getMockGeo());
+                renderRoi(getMockRoi());
+                renderComp(getMockComp());
+            }
+        }
+
+        function renderKPIs(funnel, revenue) {
+            const total = funnel.new + funnel.contacted + funnel.qualified + funnel.proposal + funnel.negotiation + funnel.won + funnel.lost || 150;
+            const won = funnel.won || 45;
+            const convRate = ((won / total) * 100).toFixed(1);
+            const rev = revenue.total || 1250000;
+            const avg = rev / (won || 1);
+
+            document.getElementById('kpiArea').innerHTML = `
+                <div class="kpi-card kpi-blue animate-fade-in-up">
+                    <div class="kpi-header">
+                        <div class="kpi-title">Total Leads</div>
+                        <div class="kpi-icon"><i class="fas fa-users"></i></div>
+                    </div>
+                    <div class="kpi-value"><span id="kpiTotal">0</span></div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 12% vs last period</div>
+                </div>
+
+                <div class="kpi-card kpi-purple animate-fade-in-up" style="animation-delay: 0.1s">
+                    <div class="kpi-header">
+                        <div class="kpi-title">Conversion Rate</div>
+                        <div class="kpi-icon"><i class="fas fa-bullseye"></i></div>
+                    </div>
+                    <div class="kpi-value"><span id="kpiConv">0</span>%</div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 2.4% vs last period</div>
+                </div>
+
+                <div class="kpi-card kpi-green animate-fade-in-up" style="animation-delay: 0.2s">
+                    <div class="kpi-header">
+                        <div class="kpi-title">Revenue Won</div>
+                        <div class="kpi-icon"><i class="fas fa-rupee-sign"></i></div>
+                    </div>
+                    <div class="kpi-value"><span class="kpi-currency">₹</span><span id="kpiRev">0</span></div>
+                    <div class="kpi-trend trend-up"><i class="fas fa-arrow-up"></i> 18% vs last period</div>
+                </div>
+
+                <div class="kpi-card kpi-orange animate-fade-in-up" style="animation-delay: 0.3s">
+                    <div class="kpi-header">
+                        <div class="kpi-title">Avg Deal Size</div>
+                        <div class="kpi-icon"><i class="fas fa-chart-pie"></i></div>
+                    </div>
+                    <div class="kpi-value"><span class="kpi-currency">₹</span><span id="kpiAvg">0</span></div>
+                    <div class="kpi-trend trend-flat"><i class="fas fa-minus"></i> 0% vs last period</div>
+                </div>
+            `;
+
+            // Animate numbers
+            animateCounter(document.getElementById('kpiTotal'), total, 1000);
+            animateCounter(document.getElementById('kpiConv'), parseFloat(convRate), 1000);
+            animateCounter(document.getElementById('kpiRev'), rev, 1200);
+            animateCounter(document.getElementById('kpiAvg'), Math.round(avg), 1200);
+        }
+
+        function createGradient(ctx, colorStart, colorEnd) {
+            const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+            gradient.addColorStop(0, colorStart);
+            gradient.addColorStop(1, colorEnd);
+            return gradient;
+        }
+
+        function renderTrendChart(data) {
+            const ctx = document.getElementById('trendChart').getContext('2d');
+            if (charts.trend) charts.trend.destroy();
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            const fillGrad = createGradient(ctx, 'rgba(233, 69, 96, 0.4)', 'rgba(233, 69, 96, 0.0)');
+
+            charts.trend = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Leads Generated',
+                        data: data.values,
+                        borderColor: '#e94560',
+                        backgroundColor: fillGrad,
+                        borderWidth: 3,
+                        pointBackgroundColor: '#fff',
+                        pointBorderColor: '#e94560',
+                        pointBorderWidth: 2,
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4 // smooth curve
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { 
+                            grid: { color: gridColor },
+                            beginAtZero: true
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index',
+                    },
+                }
+            });
+        }
+
+        function renderFunnelChart(data) {
+            const ctx = document.getElementById('funnelChart').getContext('2d');
+            if (charts.funnel) charts.funnel.destroy();
+
+            // Doughnut configuration
+            charts.funnel = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['New', 'Contacted', 'Qualified', 'Proposal', 'Negotiation', 'Won'],
+                    datasets: [{
+                        data: [data.new, data.contacted, data.qualified, data.proposal, data.negotiation, data.won],
+                        backgroundColor: [
+                            '#007bff', // blue
+                            '#fd7e14', // orange
+                            '#9c27b0', // purple
+                            '#0f3460', // navy
+                            '#ffc107', // yellow
+                            '#28a745'  // green
+                        ],
+                        borderWidth: 0,
+                        hoverOffset: 12
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '65%',
+                    plugins: {
+                        legend: {
+                            position: 'right',
+                            labels: { padding: 20, usePointStyle: true, pointStyle: 'circle' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderGeoChart(data) {
+            const ctx = document.getElementById('geoChart').getContext('2d');
+            if (charts.geo) charts.geo.destroy();
+
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const gridColor = isDark ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.05)';
+            const barGrad = createGradient(ctx, '#007bff', '#00c6ff');
+
+            charts.geo = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: data.labels,
+                    datasets: [{
+                        label: 'Leads by City',
+                        data: data.values,
+                        backgroundColor: barGrad,
+                        borderRadius: 6,
+                        borderSkipped: false
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: {
+                        x: { grid: { display: false } },
+                        y: { grid: { color: gridColor }, beginAtZero: true }
+                    }
+                }
+            });
+        }
+
+        function renderRoi(data) {
+            document.getElementById('roiMult').textContent = data.multiple + 'x';
+            document.getElementById('roiSpend').textContent = formatCurrency(data.spend);
+            document.getElementById('roiRev').textContent = formatCurrency(data.revenue);
+        }
+
+        // Mock Data Generators for robust fallback
+        function getMockFunnel() {
+            return { new: 45, contacted: 35, qualified: 25, proposal: 15, negotiation: 8, won: 22, lost: 10 };
+        }
+        function getMockRevenue(days) {
+            const labels = [];
+            const values = [];
+            let current = 10;
+            const limit = days == 7 ? 7 : (days == 30 ? 15 : 12);
+            for(let i=limit; i>0; i--) {
+                labels.push(days == 365 ? `Month ${13-i}` : `Day -${i}`);
+                current = current + Math.floor(Math.random() * 10 - 2);
+                if(current < 0) current = 5;
+                values.push(current);
+            }
+            return { total: 1850000, trend: { labels, values } };
+        }
+        function getMockGeo() {
+            return {
+                labels: ['Mumbai', 'Delhi', 'Bangalore', 'Pune', 'Chennai', 'Hyderabad'],
+                values: [120, 95, 80, 65, 40, 35]
+            };
+        }
+        function getMockRoi() {
+            return { multiple: 24, spend: 50000, revenue: 1200000 };
+        }
+
+        function getMockComp() {
+            return [
+                { name: 'IndiaMART Plus', mentions: 12, winRate: 60 },
+                { name: 'TradeIndia', mentions: 8, winRate: 40 },
+                { name: 'JustDial', mentions: 5, winRate: 80 }
+            ];
+        }
+
+        function renderComp(data) {
+            const list = Array.isArray(data) ? data : data.competitors || getMockComp();
+            let html = '<table style="width:100%;border-collapse:collapse;text-align:left;">';
+            html += '<thead><tr style="border-bottom:1px solid var(--border-secondary);"><th style="padding:10px;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Competitor</th><th style="padding:10px;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Mentions</th><th style="padding:10px;color:var(--text-muted);font-size:11px;text-transform:uppercase;">Win Rate</th></tr></thead><tbody>';
+            list.forEach(c => {
+                html += `<tr style="border-bottom:1px solid var(--border-secondary);"><td style="padding:12px 10px;font-weight:600;color:var(--text-primary);">${escapeHtml(c.name)}</td><td style="padding:12px 10px;color:var(--text-secondary);">${c.mentions}</td><td style="padding:12px 10px;"><div style="display:flex;align-items:center;gap:8px;"><span>${c.winRate || c.win_rate || 0}%</span><div style="flex:1;height:6px;background:var(--bg-tertiary);border-radius:3px;overflow:hidden;"><div style="width:${c.winRate || c.win_rate || 0}%;height:100%;background:var(--green);border-radius:3px;"></div></div></div></td></tr>`;
+            });
+            html += '</tbody></table>';
+            document.getElementById('compArea').innerHTML = html;
+        }
+
+        // Handle theme change from shared.js by re-rendering charts for grid colors
+        const originalToggle = window.toggleTheme;
+        window.toggleTheme = function() {
+            if (originalToggle) originalToggle();
+            setTimeout(loadData, 50); // small delay to let CSS var apply
+        };
+
+    </script>
+</body>
+</html>

@@ -1,0 +1,1149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LeadFlow — AI-Powered CRM for IndiaMART Sellers</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="/static/shared.css">
+    <style>
+        /* ===== LANDING PAGE OVERRIDES ===== */
+        /* Reset shared.css app layout — this is a public page */
+        body {
+            display: block;
+            min-height: auto;
+            background: #09090b;
+            color: #fafafa;
+            overflow-x: hidden;
+        }
+        body::before { display: none; }
+        .sidebar, .topbar, .main { display: none !important; }
+
+        /* ===== CSS VARIABLES ===== */
+        :root {
+            --lp-accent: #e94560;
+            --lp-accent-light: #ff6b81;
+            --lp-dark-1: #09090b;
+            --lp-dark-2: #111113;
+            --lp-dark-3: #18181b;
+            --lp-white: #fafafa;
+            --lp-gray-100: #f4f4f5;
+            --lp-gray-200: #e4e4e7;
+            --lp-gray-300: #d4d4d8;
+            --lp-gray-400: #a1a1aa;
+            --lp-gray-500: #71717a;
+            --lp-gray-600: #52525b;
+            --lp-gray-700: #3f3f46;
+            --lp-gray-800: #27272a;
+            --lp-gray-900: #18181b;
+            --lp-radius: 16px;
+            --lp-radius-lg: 24px;
+            --lp-transition: 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        /* ===== ANIMATED BACKGROUND ===== */
+        @keyframes meshShift {
+            0%, 100% {
+                background-position: 0% 0%, 100% 100%, 50% 50%;
+            }
+            25% {
+                background-position: 100% 0%, 0% 50%, 80% 20%;
+            }
+            50% {
+                background-position: 50% 100%, 50% 0%, 0% 80%;
+            }
+            75% {
+                background-position: 0% 50%, 100% 50%, 20% 10%;
+            }
+        }
+
+        .lp-page {
+            position: relative;
+        }
+
+        .lp-page::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background:
+                radial-gradient(ellipse 600px 600px at 0% 0%, rgba(233,69,96,0.12) 0%, transparent 70%),
+                radial-gradient(ellipse 500px 500px at 100% 100%, rgba(99,102,241,0.1) 0%, transparent 70%),
+                radial-gradient(ellipse 400px 400px at 50% 50%, rgba(168,85,247,0.08) 0%, transparent 70%);
+            background-size: 100% 100%;
+            animation: meshShift 20s ease-in-out infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .lp-page > * {
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ===== GRADIENT TEXT ===== */
+        @keyframes gradientTextShift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #e94560, #ff6b81, #a855f7, #6366f1, #e94560);
+            background-size: 300% 300%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: gradientTextShift 6s ease-in-out infinite;
+        }
+
+        /* ===== SCROLL ANIMATIONS ===== */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: opacity 0.8s cubic-bezier(0.16, 1, 0.3, 1), transform 0.8s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .fade-in-up.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ===== UTILITY ===== */
+        .lp-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        .lp-section {
+            padding: 120px 0;
+        }
+
+        .lp-section-title {
+            font-size: 2.8rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            color: var(--lp-white);
+        }
+
+        .lp-section-subtitle {
+            font-size: 1.15rem;
+            color: var(--lp-gray-400);
+            text-align: center;
+            max-width: 580px;
+            margin: 0 auto 72px;
+            line-height: 1.8;
+        }
+
+        /* ===== NAVBAR ===== */
+        .lp-navbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: 18px 0;
+            transition: all var(--lp-transition);
+            background: transparent;
+        }
+
+        .lp-navbar.scrolled {
+            background: rgba(9,9,11,0.85);
+            backdrop-filter: blur(24px) saturate(1.8);
+            -webkit-backdrop-filter: blur(24px) saturate(1.8);
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .lp-navbar .lp-container {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .lp-logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: var(--lp-white);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: -0.02em;
+            text-decoration: none;
+        }
+
+        .lp-logo i {
+            color: var(--lp-accent);
+            filter: drop-shadow(0 0 8px rgba(233,69,96,0.5));
+        }
+
+        .lp-logo span { color: var(--lp-accent); }
+
+        .lp-nav-links {
+            display: flex;
+            align-items: center;
+            gap: 40px;
+            list-style: none;
+        }
+
+        .lp-nav-links a {
+            color: var(--lp-gray-400);
+            font-weight: 500;
+            font-size: 0.95rem;
+            transition: color var(--lp-transition);
+            text-decoration: none;
+            position: relative;
+        }
+
+        .lp-nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -6px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--lp-accent);
+            border-radius: 2px;
+            transition: width var(--lp-transition);
+        }
+
+        .lp-nav-links a:hover { color: var(--lp-white); }
+        .lp-nav-links a:hover::after { width: 100%; }
+
+        .lp-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .lp-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 0.95rem;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all var(--lp-transition);
+            text-decoration: none;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lp-btn-primary {
+            background: linear-gradient(135deg, #e94560, #ff6b81);
+            color: #fff;
+            border-color: transparent;
+            box-shadow: 0 4px 20px rgba(233,69,96,0.3);
+        }
+
+        .lp-btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 40px rgba(233,69,96,0.5), 0 0 60px rgba(233,69,96,0.15);
+        }
+
+        .lp-btn-ghost {
+            background: transparent;
+            color: var(--lp-gray-300);
+            border-color: transparent;
+        }
+
+        .lp-btn-ghost:hover {
+            color: var(--lp-white);
+            background: rgba(255,255,255,0.05);
+        }
+
+        .lp-btn-outline {
+            background: transparent;
+            color: var(--lp-white);
+            border-color: rgba(255,255,255,0.2);
+        }
+
+        .lp-btn-outline:hover {
+            border-color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.05);
+            transform: translateY(-2px);
+        }
+
+        /* Hamburger */
+        .lp-hamburger {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--lp-white);
+            font-size: 1.5rem;
+            cursor: pointer;
+            width: 44px;
+            height: 44px;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .lp-hamburger:hover {
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* Mobile Nav */
+        .lp-mobile-nav {
+            position: fixed;
+            inset: 0;
+            background: rgba(9,9,11,0.97);
+            backdrop-filter: blur(24px);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 28px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .lp-mobile-nav.open {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .lp-mobile-nav a {
+            color: var(--lp-white);
+            font-size: 1.4rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .lp-mobile-nav a:hover { color: var(--lp-accent); }
+
+        .lp-mobile-close {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+            background: none;
+            border: none;
+            color: var(--lp-white);
+            font-size: 2rem;
+            cursor: pointer;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            transition: background 0.2s;
+        }
+
+        .lp-mobile-close:hover { background: rgba(255,255,255,0.08); }
+
+        /* ===== HERO ===== */
+        .lp-hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 140px 24px 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Floating orbs */
+        .lp-hero::before {
+            content: '';
+            position: absolute;
+            top: 10%;
+            right: -5%;
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(233,69,96,0.15) 0%, transparent 70%);
+            animation: orbFloat 8s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .lp-hero::after {
+            content: '';
+            position: absolute;
+            bottom: 5%;
+            left: -8%;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(99,102,241,0.12) 0%, transparent 70%);
+            animation: orbFloat 10s ease-in-out infinite reverse;
+            pointer-events: none;
+        }
+
+        @keyframes orbFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -20px) scale(1.05); }
+            66% { transform: translate(-20px, 15px) scale(0.95); }
+        }
+
+        .lp-hero-content {
+            max-width: 860px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .lp-hero-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(233,69,96,0.1);
+            border: 1px solid rgba(233,69,96,0.2);
+            color: var(--lp-accent-light);
+            padding: 8px 20px;
+            border-radius: 50px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 32px;
+            animation: fadeInDown 0.8s ease both;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lp-hero h1 {
+            font-size: 4.2rem;
+            font-weight: 900;
+            line-height: 1.1;
+            margin-bottom: 28px;
+            letter-spacing: -0.04em;
+            animation: fadeInUp2 0.8s ease 0.15s both;
+        }
+
+        @keyframes fadeInUp2 {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .lp-hero .subtitle {
+            font-size: 1.25rem;
+            color: var(--lp-gray-400);
+            line-height: 1.8;
+            margin-bottom: 48px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            animation: fadeInUp2 0.8s ease 0.3s both;
+        }
+
+        .lp-hero-ctas {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            flex-wrap: wrap;
+            animation: fadeInUp2 0.8s ease 0.45s both;
+        }
+
+        .lp-hero-ctas .lp-btn {
+            padding: 16px 36px;
+            font-size: 1.05rem;
+        }
+
+        /* ===== STATS SECTION ===== */
+        .lp-stats {
+            padding: 80px 0;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            background: rgba(17,17,19,0.5);
+        }
+
+        .lp-stats .lp-container {
+            display: flex;
+            justify-content: center;
+            gap: 100px;
+            flex-wrap: wrap;
+        }
+
+        .lp-stat-item {
+            text-align: center;
+        }
+
+        .lp-stat-number {
+            font-size: 3rem;
+            font-weight: 900;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--lp-white), var(--lp-gray-300));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lp-stat-number .counter-suffix {
+            background: linear-gradient(135deg, var(--lp-accent), var(--lp-accent-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .lp-stat-label {
+            font-size: 0.95rem;
+            color: var(--lp-gray-500);
+            font-weight: 500;
+        }
+
+        /* ===== FEATURES ===== */
+        .lp-features {
+            background: transparent;
+        }
+
+        .lp-features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+        }
+
+        .lp-feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: var(--lp-radius-lg);
+            padding: 40px 32px;
+            transition: all var(--lp-transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lp-feature-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: inherit;
+            padding: 1px;
+            background: linear-gradient(135deg, transparent, rgba(233,69,96,0.15), transparent);
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0;
+            transition: opacity var(--lp-transition);
+        }
+
+        .lp-feature-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255,255,255,0.05);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3), 0 0 40px rgba(233,69,96,0.05);
+        }
+
+        .lp-feature-card:hover::before { opacity: 1; }
+
+        .lp-feature-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin-bottom: 24px;
+            background: rgba(233,69,96,0.08);
+            border: 1px solid rgba(233,69,96,0.1);
+            transition: all var(--lp-transition);
+        }
+
+        .lp-feature-card:hover .lp-feature-icon {
+            transform: scale(1.1) rotate(3deg);
+            box-shadow: 0 0 24px rgba(233,69,96,0.2);
+        }
+
+        .lp-feature-card h3 {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: var(--lp-white);
+            margin-bottom: 12px;
+        }
+
+        .lp-feature-card p {
+            color: var(--lp-gray-500);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* ===== HOW IT WORKS ===== */
+        .lp-how {
+            background: transparent;
+        }
+
+        .lp-steps {
+            display: flex;
+            justify-content: center;
+            gap: 0;
+            max-width: 960px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .lp-step {
+            flex: 1;
+            text-align: center;
+            padding: 0 32px;
+            position: relative;
+        }
+
+        /* Connector line */
+        .lp-step:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            top: 40px;
+            right: -10px;
+            width: calc(100% - 64px);
+            height: 2px;
+            background: linear-gradient(90deg, rgba(233,69,96,0.5), rgba(99,102,241,0.2));
+            transform: translateX(50%);
+        }
+
+        .lp-step-number {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #e94560, #a855f7);
+            color: #fff;
+            font-size: 1.6rem;
+            font-weight: 900;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 28px;
+            position: relative;
+            z-index: 2;
+            box-shadow: 0 8px 32px rgba(233,69,96,0.3), 0 0 60px rgba(233,69,96,0.1);
+            transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .lp-step:hover .lp-step-number {
+            transform: scale(1.1);
+        }
+
+        .lp-step h3 {
+            font-size: 1.15rem;
+            font-weight: 700;
+            color: var(--lp-white);
+            margin-bottom: 12px;
+        }
+
+        .lp-step p {
+            color: var(--lp-gray-500);
+            font-size: 0.95rem;
+            line-height: 1.7;
+        }
+
+        /* ===== CTA BANNER ===== */
+        .lp-cta-banner {
+            padding: 100px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lp-cta-banner::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(233,69,96,0.08), rgba(99,102,241,0.05));
+            border-top: 1px solid rgba(233,69,96,0.1);
+            border-bottom: 1px solid rgba(233,69,96,0.1);
+        }
+
+        .lp-cta-banner .lp-container {
+            position: relative;
+            z-index: 2;
+        }
+
+        .lp-cta-banner h2 {
+            font-size: 3rem;
+            font-weight: 900;
+            color: var(--lp-white);
+            margin-bottom: 16px;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+        }
+
+        .lp-cta-banner p {
+            font-size: 1.15rem;
+            color: var(--lp-gray-400);
+            margin-bottom: 40px;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.7;
+        }
+
+        .lp-cta-banner .lp-btn-primary {
+            padding: 18px 48px;
+            font-size: 1.1rem;
+        }
+
+        /* Glow orb behind CTA */
+        .lp-cta-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(233,69,96,0.1), transparent 70%);
+            pointer-events: none;
+        }
+
+        /* ===== FOOTER ===== */
+        .lp-footer {
+            background: rgba(9,9,11,0.8);
+            border-top: 1px solid rgba(255,255,255,0.05);
+            padding: 64px 0 32px;
+            color: var(--lp-gray-500);
+        }
+
+        .lp-footer-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr;
+            gap: 48px;
+            margin-bottom: 48px;
+        }
+
+        .lp-footer-brand p {
+            font-size: 0.9rem;
+            line-height: 1.8;
+            margin-top: 16px;
+            color: var(--lp-gray-500);
+        }
+
+        .lp-footer-social {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        .lp-footer-social a {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.08);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--lp-gray-500);
+            transition: all var(--lp-transition);
+            text-decoration: none;
+        }
+
+        .lp-footer-social a:hover {
+            background: var(--lp-accent);
+            border-color: var(--lp-accent);
+            color: #fff;
+            transform: translateY(-3px);
+            box-shadow: 0 4px 16px rgba(233,69,96,0.3);
+        }
+
+        .lp-footer-col h4 {
+            color: var(--lp-white);
+            font-size: 0.85rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 20px;
+        }
+
+        .lp-footer-col a {
+            display: block;
+            font-size: 0.9rem;
+            padding: 6px 0;
+            color: var(--lp-gray-500);
+            transition: color var(--lp-transition);
+            text-decoration: none;
+        }
+
+        .lp-footer-col a:hover { color: var(--lp-accent-light); }
+
+        .lp-footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            font-size: 0.85rem;
+            color: var(--lp-gray-600);
+        }
+
+        .lp-footer-bottom .made-in {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1024px) {
+            .lp-hero h1 { font-size: 3.2rem; }
+            .lp-features-grid { grid-template-columns: repeat(2, 1fr); }
+            .lp-footer-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        @media (max-width: 768px) {
+            .lp-nav-links,
+            .lp-nav-actions { display: none; }
+            .lp-hamburger { display: flex; }
+
+            .lp-hero h1 { font-size: 2.4rem; }
+            .lp-hero .subtitle { font-size: 1.05rem; }
+
+            .lp-section { padding: 80px 0; }
+            .lp-section-title { font-size: 2rem; }
+            .lp-section-subtitle { font-size: 1rem; margin-bottom: 48px; }
+
+            .lp-features-grid { grid-template-columns: 1fr; }
+
+            .lp-steps { flex-direction: column; gap: 48px; }
+            .lp-step:not(:last-child)::after { display: none; }
+
+            .lp-stats .lp-container { gap: 48px; }
+            .lp-stat-number { font-size: 2.4rem; }
+
+            .lp-cta-banner h2 { font-size: 2.2rem; }
+
+            .lp-footer-grid { grid-template-columns: 1fr; gap: 32px; }
+        }
+
+        @media (max-width: 480px) {
+            .lp-hero h1 { font-size: 2rem; }
+            .lp-hero-ctas { flex-direction: column; align-items: center; }
+            .lp-hero-ctas .lp-btn { width: 100%; justify-content: center; }
+            .lp-stats .lp-container { flex-direction: column; gap: 32px; align-items: center; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="lp-page">
+
+    <!-- Mobile Nav Overlay -->
+    <div class="lp-mobile-nav" id="mobileNav">
+        <button class="lp-mobile-close" id="mobileClose" aria-label="Close menu">&times;</button>
+        <a href="#features" class="mobile-nav-link">Features</a>
+        <a href="#how-it-works" class="mobile-nav-link">How It Works</a>
+        <a href="#stats" class="mobile-nav-link">Stats</a>
+        <a href="/app/login" class="mobile-nav-link">Login</a>
+        <a href="/app/signup" class="lp-btn lp-btn-primary" style="margin-top:12px;">Get Started Free</a>
+    </div>
+
+    <!-- Navbar -->
+    <nav class="lp-navbar" id="navbar">
+        <div class="lp-container">
+            <a href="#" class="lp-logo">
+                <i class="fas fa-bolt"></i>
+                Lead<span>Flow</span>
+            </a>
+            <ul class="lp-nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#stats">Stats</a></li>
+            </ul>
+            <div class="lp-nav-actions">
+                <a href="/app/login" class="lp-btn lp-btn-ghost">Login</a>
+                <a href="/app/signup" class="lp-btn lp-btn-primary">Get Started</a>
+            </div>
+            <button class="lp-hamburger" id="hamburger" aria-label="Open menu">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="lp-hero">
+        <div class="lp-hero-content">
+            <div class="lp-hero-badge">
+                <i class="fas fa-sparkles"></i>
+                Built for IndiaMART Sellers
+            </div>
+            <h1>
+                <span class="gradient-text">AI-Powered CRM</span><br>
+                for IndiaMART Sellers
+            </h1>
+            <p class="subtitle">
+                Automatically fetch, score, and respond to buyer leads with AI.
+                Stop losing enquiries — start closing deals 10x faster.
+            </p>
+            <div class="lp-hero-ctas">
+                <a href="/app/signup" class="lp-btn lp-btn-primary">
+                    <i class="fas fa-rocket"></i> Get Started Free
+                </a>
+                <a href="#features" class="lp-btn lp-btn-outline">
+                    <i class="fas fa-arrow-down"></i> See Features
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Stats -->
+    <section class="lp-stats" id="stats">
+        <div class="lp-container">
+            <div class="lp-stat-item fade-in-up">
+                <div class="lp-stat-number">
+                    <span class="counter" data-target="10000">0</span><span class="counter-suffix">+</span>
+                </div>
+                <div class="lp-stat-label">Leads Managed</div>
+            </div>
+            <div class="lp-stat-item fade-in-up">
+                <div class="lp-stat-number">
+                    <span class="counter" data-target="500">0</span><span class="counter-suffix">+</span>
+                </div>
+                <div class="lp-stat-label">Active Users</div>
+            </div>
+            <div class="lp-stat-item fade-in-up">
+                <div class="lp-stat-number">
+                    <span class="counter" data-target="95">0</span><span class="counter-suffix">%</span>
+                </div>
+                <div class="lp-stat-label">Time Saved</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features -->
+    <section class="lp-features lp-section" id="features">
+        <div class="lp-container">
+            <h2 class="lp-section-title">Everything You Need to Close More Deals</h2>
+            <p class="lp-section-subtitle">Six powerful tools designed to automate your IndiaMART lead pipeline from first enquiry to final conversion.</p>
+            <div class="lp-features-grid">
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">🔄</div>
+                    <h3>Lead Sync</h3>
+                    <p>Automatically pull new buyer enquiries from IndiaMART every few minutes. Never miss a lead — they show up the moment they arrive.</p>
+                </div>
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">🧠</div>
+                    <h3>AI Scoring</h3>
+                    <p>Our AI ranks every lead by purchase intent, urgency, and budget signals. Focus your energy where it actually converts.</p>
+                </div>
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">💬</div>
+                    <h3>Smart Replies</h3>
+                    <p>Generate personalized, professional replies in seconds. AI understands context, product details, and buyer tone to craft perfect responses.</p>
+                </div>
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">📊</div>
+                    <h3>Pipeline</h3>
+                    <p>Visualize your entire sales funnel at a glance. Drag leads through stages — from new enquiry to closed deal — with zero friction.</p>
+                </div>
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">📈</div>
+                    <h3>Analytics</h3>
+                    <p>Real-time dashboards showing response rates, conversion trends, and performance metrics. Data-driven decisions, not guesswork.</p>
+                </div>
+                <div class="lp-feature-card fade-in-up">
+                    <div class="lp-feature-icon">🔁</div>
+                    <h3>Auto Follow-up</h3>
+                    <p>Set intelligent follow-up sequences that trigger automatically. Stay top-of-mind without lifting a finger — the AI handles timing and tone.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How It Works -->
+    <section class="lp-how lp-section" id="how-it-works">
+        <div class="lp-container">
+            <h2 class="lp-section-title">Up and Running in 3 Steps</h2>
+            <p class="lp-section-subtitle">No complex setup. No technical knowledge. Just connect your IndiaMART account and let AI do the heavy lifting.</p>
+            <div class="lp-steps">
+                <div class="lp-step fade-in-up">
+                    <div class="lp-step-number">1</div>
+                    <h3>Connect</h3>
+                    <p>Paste your IndiaMART API key. One field, 30 seconds, done. We securely sync your leads in real-time.</p>
+                </div>
+                <div class="lp-step fade-in-up">
+                    <div class="lp-step-number">2</div>
+                    <h3>Automate</h3>
+                    <p>Our AI scores every lead, drafts replies, and schedules follow-ups. Your pipeline fills itself while you focus on selling.</p>
+                </div>
+                <div class="lp-step fade-in-up">
+                    <div class="lp-step-number">3</div>
+                    <h3>Convert</h3>
+                    <p>Respond faster, follow up smarter, close more. Watch your conversion rate climb with zero extra effort.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Banner -->
+    <section class="lp-cta-banner">
+        <div class="lp-cta-glow"></div>
+        <div class="lp-container">
+            <h2 class="fade-in-up">Ready to 10x Your<br>IndiaMART Sales?</h2>
+            <p class="fade-in-up">Join hundreds of IndiaMART sellers who are already closing more deals with LeadFlow.</p>
+            <a href="/app/signup" class="lp-btn lp-btn-primary fade-in-up">
+                <i class="fas fa-rocket"></i> Start Your Free Trial
+            </a>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="lp-footer">
+        <div class="lp-container">
+            <div class="lp-footer-grid">
+                <div class="lp-footer-brand">
+                    <a href="#" class="lp-logo">
+                        <i class="fas fa-bolt"></i>
+                        Lead<span>Flow</span>
+                    </a>
+                    <p>AI-powered CRM built specifically for IndiaMART sellers. Fetch, score, and reply to buyer enquiries automatically.</p>
+                    <div class="lp-footer-social">
+                        <a href="#" aria-label="Twitter"><i class="fab fa-twitter"></i></a>
+                        <a href="#" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+                        <a href="#" aria-label="YouTube"><i class="fab fa-youtube"></i></a>
+                        <a href="#" aria-label="Instagram"><i class="fab fa-instagram"></i></a>
+                    </div>
+                </div>
+                <div class="lp-footer-col">
+                    <h4>Product</h4>
+                    <a href="#features">Features</a>
+                    <a href="#how-it-works">How It Works</a>
+                    <a href="#">Integrations</a>
+                    <a href="#">Changelog</a>
+                </div>
+                <div class="lp-footer-col">
+                    <h4>Company</h4>
+                    <a href="#">About</a>
+                    <a href="#">Blog</a>
+                    <a href="#">Careers</a>
+                    <a href="#">Contact</a>
+                </div>
+                <div class="lp-footer-col">
+                    <h4>Legal</h4>
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Refund Policy</a>
+                </div>
+            </div>
+            <div class="lp-footer-bottom">
+                <div>&copy; 2025 LeadFlow. All rights reserved.</div>
+                <div class="made-in">Made in India 🇮🇳</div>
+            </div>
+        </div>
+    </footer>
+
+</div>
+
+<script>
+(function() {
+    'use strict';
+
+    // ===== Smooth scroll for anchor links =====
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+        anchor.addEventListener('click', function(e) {
+            const target = document.querySelector(this.getAttribute('href'));
+            if (target) {
+                e.preventDefault();
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        });
+    });
+
+    // ===== Navbar scroll effect =====
+    const navbar = document.getElementById('navbar');
+    let lastScroll = 0;
+    window.addEventListener('scroll', () => {
+        navbar.classList.toggle('scrolled', window.scrollY > 50);
+        lastScroll = window.scrollY;
+    }, { passive: true });
+
+    // ===== Hamburger menu =====
+    const mobileNav = document.getElementById('mobileNav');
+    document.getElementById('hamburger').addEventListener('click', () => {
+        mobileNav.classList.add('open');
+    });
+    document.getElementById('mobileClose').addEventListener('click', () => {
+        mobileNav.classList.remove('open');
+    });
+    // Close on link click
+    mobileNav.querySelectorAll('.mobile-nav-link').forEach(link => {
+        link.addEventListener('click', () => mobileNav.classList.remove('open'));
+    });
+
+    // ===== IntersectionObserver: fade-in-up on scroll =====
+    const fadeObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry, i) => {
+            if (entry.isIntersecting) {
+                // Stagger siblings
+                const parent = entry.target.parentElement;
+                const siblings = Array.from(parent.querySelectorAll('.fade-in-up'));
+                const idx = siblings.indexOf(entry.target);
+                const delay = idx >= 0 ? idx * 100 : 0;
+
+                setTimeout(() => {
+                    entry.target.classList.add('visible');
+                }, delay);
+                fadeObserver.unobserve(entry.target);
+            }
+        });
+    }, { threshold: 0.15, rootMargin: '0px 0px -40px 0px' });
+
+    document.querySelectorAll('.fade-in-up').forEach(el => fadeObserver.observe(el));
+
+    // ===== Animated number counter =====
+    let countersStarted = false;
+
+    function animateCounters() {
+        if (countersStarted) return;
+        countersStarted = true;
+
+        document.querySelectorAll('.counter').forEach(counter => {
+            const target = parseInt(counter.getAttribute('data-target'), 10);
+            const duration = 2000; // ms
+            const startTime = performance.now();
+
+            function easeOutExpo(t) {
+                return t === 1 ? 1 : 1 - Math.pow(2, -10 * t);
+            }
+
+            function update(now) {
+                const elapsed = now - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                const easedProgress = easeOutExpo(progress);
+                const current = Math.floor(easedProgress * target);
+
+                counter.textContent = current.toLocaleString('en-IN');
+
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                } else {
+                    counter.textContent = target.toLocaleString('en-IN');
+                }
+            }
+
+            requestAnimationFrame(update);
+        });
+    }
+
+    const statsSection = document.getElementById('stats');
+    if (statsSection) {
+        const counterObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    animateCounters();
+                    counterObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.3 });
+
+        counterObserver.observe(statsSection);
+    }
+
+})();
+</script>
+
+</body>
+</html>

@@ -1,0 +1,13 @@
+{
+  "name": "LeadFlow CRM",
+  "short_name": "LeadFlow",
+  "description": "AI-Powered IndiaMART Lead Manager",
+  "start_url": "/app/dashboard",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#e94560",
+  "icons": [
+    {"src": "/static/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml"},
+    {"src": "/static/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml"}
+  ]
+}

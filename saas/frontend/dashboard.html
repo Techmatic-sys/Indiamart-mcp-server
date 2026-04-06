@@ -1,0 +1,1247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard — LeadFlow CRM</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+    <link href="/static/shared.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        /* ═══════════════════════════════════════════
+           DASHBOARD — Executive Glassmorphism Theme
+           ═══════════════════════════════════════════ */
+
+        /* ── Keyframes ── */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(24px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes slideInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        @keyframes countUp {
+            from { opacity: 0; transform: scale(0.5); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.9); opacity: 1; }
+            100% { transform: scale(1.4); opacity: 0; }
+        }
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        @keyframes breathe {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(233,69,96,0.4); }
+            50% { box-shadow: 0 0 0 8px rgba(233,69,96,0); }
+        }
+        @keyframes sparkline-draw {
+            from { stroke-dashoffset: 300; }
+            to { stroke-dashoffset: 0; }
+        }
+        @keyframes ring-fill {
+            from { stroke-dashoffset: 251.2; }
+        }
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-6px); }
+        }
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        @keyframes entry-slide {
+            from { opacity: 0; transform: translateX(-16px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        /* ── Skeleton loading ── */
+        .skel {
+            background: linear-gradient(90deg, var(--bg-tertiary) 25%, var(--border-primary) 50%, var(--bg-tertiary) 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s ease-in-out infinite;
+            border-radius: 8px;
+        }
+        .skel-stat { height: 120px; border-radius: 16px; }
+        .skel-chart { height: 320px; border-radius: 16px; }
+        .skel-card { height: 80px; border-radius: 12px; margin-bottom: 12px; }
+        .skel-line { height: 16px; border-radius: 8px; margin-bottom: 10px; }
+        .skel-line.w60 { width: 60%; }
+        .skel-line.w40 { width: 40%; }
+
+        /* ── Greeting banner ── */
+        .greeting-banner {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #e94560 100%);
+            background-size: 200% 200%;
+            animation: gradient-shift 8s ease infinite;
+            border-radius: 20px;
+            padding: 28px 32px;
+            color: #fff;
+            margin-bottom: 24px;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards, gradient-shift 8s ease infinite;
+        }
+        .greeting-banner::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.08);
+        }
+        .greeting-banner::after {
+            content: '';
+            position: absolute;
+            bottom: -40%;
+            left: 10%;
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.05);
+        }
+        .greeting-banner h1 {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            position: relative;
+            z-index: 1;
+        }
+        .greeting-banner p {
+            font-size: 14px;
+            opacity: 0.85;
+            position: relative;
+            z-index: 1;
+        }
+        .greeting-banner .greeting-icon {
+            font-size: 28px;
+            margin-right: 8px;
+            animation: float 3s ease-in-out infinite;
+            display: inline-block;
+        }
+        .greeting-banner .greeting-date {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* ── Glassmorphism card base ── */
+        .glass-card {
+            background: rgba(var(--card-rgb, 255,255,255), 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 16px;
+            box-shadow: 0 4px 30px rgba(0,0,0,0.06);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow: hidden;
+        }
+        [data-theme="dark"] .glass-card {
+            background: rgba(30,30,46,0.7);
+            border: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 4px 30px rgba(0,0,0,0.2);
+        }
+        .glass-card:hover {
+            box-shadow: 0 8px 40px rgba(0,0,0,0.1);
+            transform: translateY(-2px);
+        }
+        .glass-card .card-header {
+            padding: 18px 22px 0;
+            border-bottom: none;
+        }
+        .glass-card .card-header h2 {
+            font-size: 15px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .glass-card .card-body {
+            padding: 16px 22px 22px;
+        }
+
+        /* ── Stats row ── */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .stat-card-v2 {
+            border-radius: 16px;
+            padding: 22px;
+            position: relative;
+            overflow: hidden;
+            color: #fff;
+            opacity: 0;
+            cursor: default;
+        }
+        .stat-card-v2.loaded {
+            animation: fadeInUp 0.5s ease forwards;
+        }
+        .stat-card-v2:nth-child(1) { animation-delay: 0.05s; }
+        .stat-card-v2:nth-child(2) { animation-delay: 0.1s; }
+        .stat-card-v2:nth-child(3) { animation-delay: 0.15s; }
+        .stat-card-v2:nth-child(4) { animation-delay: 0.2s; }
+        .stat-card-v2.grad-blue { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .stat-card-v2.grad-green { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .stat-card-v2.grad-orange { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .stat-card-v2.grad-purple { background: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%); }
+        .stat-card-v2::before {
+            content: '';
+            position: absolute;
+            top: -30px;
+            right: -30px;
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.15);
+        }
+        .stat-card-v2::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: -20px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+        .stat-card-v2 .stat-label {
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            opacity: 0.9;
+            margin-bottom: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .stat-card-v2 .stat-value {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1;
+            position: relative;
+            z-index: 1;
+        }
+        .stat-card-v2 .stat-footer {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-top: 12px;
+            position: relative;
+            z-index: 1;
+        }
+        .stat-card-v2 .stat-change {
+            font-size: 12px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stat-card-v2 .stat-sparkline {
+            width: 80px;
+            height: 30px;
+        }
+        .stat-card-v2 .stat-sparkline polyline {
+            fill: none;
+            stroke: rgba(255,255,255,0.7);
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            stroke-dasharray: 300;
+            animation: sparkline-draw 1.5s ease forwards;
+        }
+        .stat-card-v2 .stat-icon-bg {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 1;
+        }
+
+        /* ── Main grid layout ── */
+        .dash-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .dash-grid-3 {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+            margin-bottom: 24px;
+        }
+        .dash-full { grid-column: 1 / -1; }
+
+        /* ── Chart containers ── */
+        .chart-wrap {
+            position: relative;
+            height: 280px;
+            padding: 10px 0;
+        }
+
+        /* ── Funnel visualization ── */
+        .funnel-visual {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            padding: 8px 0;
+        }
+        .funnel-step {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            opacity: 0;
+            animation: fadeInUp 0.4s ease forwards;
+        }
+        .funnel-step:nth-child(1) { animation-delay: 0.05s; }
+        .funnel-step:nth-child(2) { animation-delay: 0.1s; }
+        .funnel-step:nth-child(3) { animation-delay: 0.15s; }
+        .funnel-step:nth-child(4) { animation-delay: 0.2s; }
+        .funnel-step:nth-child(5) { animation-delay: 0.25s; }
+        .funnel-step:nth-child(6) { animation-delay: 0.3s; }
+        .funnel-step:nth-child(7) { animation-delay: 0.35s; }
+        .funnel-step-label {
+            width: 90px;
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            text-transform: capitalize;
+            text-align: right;
+            flex-shrink: 0;
+        }
+        .funnel-step-bar-wrap {
+            flex: 1;
+            height: 32px;
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            overflow: hidden;
+            position: relative;
+        }
+        .funnel-step-bar {
+            height: 100%;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+            color: #fff;
+            min-width: 36px;
+            transition: width 1s cubic-bezier(0.4, 0, 0.2, 1);
+            width: 0;
+        }
+        .funnel-step-bar.c-new { background: linear-gradient(90deg, #4facfe, #00f2fe); }
+        .funnel-step-bar.c-contacted { background: linear-gradient(90deg, #f093fb, #f5576c); }
+        .funnel-step-bar.c-qualified { background: linear-gradient(90deg, #a18cd1, #667eea); }
+        .funnel-step-bar.c-proposal { background: linear-gradient(90deg, #0f3460, #16213e); }
+        .funnel-step-bar.c-negotiation { background: linear-gradient(90deg, #f7971e, #ffd200); }
+        .funnel-step-bar.c-won { background: linear-gradient(90deg, #11998e, #38ef7d); }
+        .funnel-step-bar.c-lost { background: linear-gradient(90deg, #e94560, #c0392b); }
+        .funnel-step-count {
+            width: 44px;
+            font-size: 14px;
+            font-weight: 700;
+            color: var(--text-primary);
+            text-align: left;
+            flex-shrink: 0;
+        }
+
+        /* ── Revenue cards with progress rings ── */
+        .revenue-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 18px;
+            margin-bottom: 24px;
+        }
+        .rev-card {
+            border-radius: 16px;
+            padding: 24px;
+            color: #fff;
+            position: relative;
+            overflow: hidden;
+            opacity: 0;
+            animation: fadeInUp 0.6s ease forwards;
+        }
+        .rev-card:nth-child(1) { animation-delay: 0.1s; }
+        .rev-card:nth-child(2) { animation-delay: 0.2s; }
+        .rev-card.pipeline { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .rev-card.won { background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%); }
+        .rev-card::before {
+            content: '';
+            position: absolute;
+            top: -40px;
+            right: -40px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+        }
+        .rev-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .rev-card h4 {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+            opacity: 0.85;
+            font-weight: 600;
+        }
+        .rev-card .rev-amount {
+            font-size: 28px;
+            font-weight: 800;
+            margin-top: 8px;
+            position: relative;
+            z-index: 1;
+        }
+        .rev-card .rev-sub {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 4px;
+        }
+        .progress-ring {
+            width: 56px;
+            height: 56px;
+            flex-shrink: 0;
+        }
+        .progress-ring circle {
+            fill: none;
+            stroke-width: 5;
+            stroke-linecap: round;
+            transform: rotate(-90deg);
+            transform-origin: 50% 50%;
+        }
+        .progress-ring .ring-bg { stroke: rgba(255,255,255,0.2); }
+        .progress-ring .ring-fill {
+            stroke: rgba(255,255,255,0.9);
+            stroke-dasharray: 251.2;
+            animation: ring-fill 1.5s ease forwards;
+        }
+        .progress-ring .ring-text {
+            font-size: 11px;
+            font-weight: 700;
+            fill: #fff;
+            text-anchor: middle;
+            dominant-baseline: central;
+        }
+
+        /* ── Hot leads widget ── */
+        .hot-lead-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border-secondary);
+            opacity: 0;
+            animation: entry-slide 0.4s ease forwards;
+        }
+        .hot-lead-item:last-child { border-bottom: none; }
+        .hot-lead-item:nth-child(1) { animation-delay: 0.05s; }
+        .hot-lead-item:nth-child(2) { animation-delay: 0.1s; }
+        .hot-lead-item:nth-child(3) { animation-delay: 0.15s; }
+        .hot-lead-item:nth-child(4) { animation-delay: 0.2s; }
+        .hot-lead-item:nth-child(5) { animation-delay: 0.25s; }
+        .hot-lead-score {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 14px;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .hot-lead-score.high {
+            background: linear-gradient(135deg, #e94560, #ff6b6b);
+            color: #fff;
+            animation: breathe 2s ease-in-out infinite;
+        }
+        .hot-lead-score.med {
+            background: linear-gradient(135deg, #f7971e, #ffd200);
+            color: #fff;
+        }
+        .hot-lead-score.low {
+            background: var(--bg-tertiary);
+            color: var(--text-secondary);
+        }
+        .hot-lead-score::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            border: 2px solid transparent;
+        }
+        .hot-lead-score.high::after {
+            border-color: rgba(233,69,96,0.3);
+            animation: pulse-ring 2s ease-out infinite;
+        }
+        .hot-lead-info { flex: 1; min-width: 0; }
+        .hot-lead-name {
+            font-weight: 700;
+            font-size: 13px;
+            color: var(--text-primary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hot-lead-product {
+            font-size: 12px;
+            color: var(--text-tertiary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .hot-lead-arrow {
+            color: var(--text-muted);
+            font-size: 12px;
+            transition: transform 0.2s;
+        }
+        .hot-lead-item:hover .hot-lead-arrow {
+            transform: translateX(3px);
+            color: var(--accent);
+        }
+
+        /* ── Activity feed ── */
+        .activity-feed { max-height: 400px; overflow-y: auto; }
+        .activity-feed::-webkit-scrollbar { width: 4px; }
+        .activity-feed::-webkit-scrollbar-thumb { background: var(--border-primary); border-radius: 4px; }
+        .activity-entry {
+            display: flex;
+            gap: 12px;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border-secondary);
+            opacity: 0;
+            animation: entry-slide 0.4s ease forwards;
+        }
+        .activity-entry:last-child { border-bottom: none; }
+        .activity-entry:nth-child(1) { animation-delay: 0.05s; }
+        .activity-entry:nth-child(2) { animation-delay: 0.1s; }
+        .activity-entry:nth-child(3) { animation-delay: 0.15s; }
+        .activity-entry:nth-child(4) { animation-delay: 0.2s; }
+        .activity-entry:nth-child(5) { animation-delay: 0.25s; }
+        .activity-dot {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+        .activity-dot.note { background: linear-gradient(135deg, #4facfe22, #00f2fe22); color: #4facfe; }
+        .activity-dot.call { background: linear-gradient(135deg, #11998e22, #38ef7d22); color: #11998e; }
+        .activity-dot.email { background: linear-gradient(135deg, #f7971e22, #ffd20022); color: #f7971e; }
+        .activity-dot.whatsapp { background: linear-gradient(135deg, #25d36622, #128c7e22); color: #25d366; }
+        .activity-dot.meeting { background: linear-gradient(135deg, #a18cd122, #667eea22); color: #764ba2; }
+        .activity-dot.stage_change { background: linear-gradient(135deg, #e9456022, #ff6b6b22); color: #e94560; }
+        .activity-text { flex: 1; font-size: 13px; color: var(--text-secondary); line-height: 1.5; }
+        .activity-text strong { color: var(--text-primary); font-weight: 600; }
+        .activity-time { font-size: 11px; color: var(--text-muted); margin-top: 3px; }
+
+        /* ── Recommendations ── */
+        .rec-item {
+            display: flex;
+            gap: 14px;
+            padding: 14px;
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+            border: 1px solid transparent;
+        }
+        .rec-item:hover {
+            border-color: var(--accent);
+            background: rgba(233,69,96,0.04);
+            transform: translateX(4px);
+        }
+        .rec-emoji { font-size: 26px; flex-shrink: 0; }
+        .rec-text h4 { font-size: 13px; font-weight: 700; color: var(--text-primary); }
+        .rec-text p { font-size: 12px; color: var(--text-tertiary); margin-top: 3px; line-height: 1.4; }
+
+        /* ── Reminder widget ── */
+        .reminder-entry {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border-secondary);
+        }
+        .reminder-entry:last-child { border-bottom: none; }
+        .reminder-badge {
+            background: linear-gradient(135deg, #fa709a, #fee140);
+            color: #fff;
+            font-size: 10px;
+            font-weight: 700;
+            padding: 4px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+        }
+        .reminder-content { flex: 1; min-width: 0; }
+        .reminder-content .msg { font-size: 13px; font-weight: 600; color: var(--text-primary); }
+        .reminder-content .lead-ref { font-size: 12px; color: var(--text-tertiary); }
+
+        /* ── Sync status ── */
+        .sync-status { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-tertiary); }
+        .sync-dot { width: 8px; height: 8px; border-radius: 50%; }
+        .sync-dot.ok { background: var(--green); box-shadow: 0 0 6px rgba(40,167,69,0.5); }
+        .sync-dot.err { background: var(--red); }
+        .sync-dot.pending { background: var(--yellow); animation: breathe 1.5s infinite; }
+
+        /* ── Table overrides ── */
+        .leads-table-wrap { overflow-x: auto; }
+        .leads-table-wrap table { font-size: 13px; }
+        .lead-name-cell { font-weight: 600; color: var(--text-primary); }
+        .lead-product-cell { color: var(--text-tertiary); }
+
+        /* ── Empty states ── */
+        .empty-box {
+            text-align: center;
+            padding: 32px 16px;
+            color: var(--text-muted);
+        }
+        .empty-box .empty-icon { font-size: 36px; margin-bottom: 10px; }
+        .empty-box p { font-size: 13px; }
+
+        /* ── Responsive ── */
+        @media (max-width: 1200px) {
+            .stats-row { grid-template-columns: repeat(2, 1fr); }
+            .dash-grid, .dash-grid-3 { grid-template-columns: 1fr; }
+            .revenue-row { grid-template-columns: 1fr; }
+        }
+        @media (max-width: 640px) {
+            .stats-row { grid-template-columns: 1fr; }
+            .greeting-banner { padding: 20px; }
+            .greeting-banner h1 { font-size: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="sidebarContainer"></div>
+    <div class="main">
+        <div id="topbarContainer"></div>
+        <div class="content">
+
+            <!-- Greeting Banner -->
+            <div class="greeting-banner" id="greetingBanner">
+                <h1><span class="greeting-icon" id="greetIcon">☀️</span> <span id="greetText">Good morning</span></h1>
+                <p id="greetSub">Here's what's happening with your leads today.</p>
+                <div class="greeting-date" id="greetDate"></div>
+            </div>
+
+            <!-- Stats Row (skeleton by default) -->
+            <div class="stats-row" id="statsRow">
+                <div class="skel skel-stat"></div>
+                <div class="skel skel-stat"></div>
+                <div class="skel skel-stat"></div>
+                <div class="skel skel-stat"></div>
+            </div>
+
+            <!-- Revenue Cards -->
+            <div class="revenue-row" id="revenueRow">
+                <div class="skel skel-stat"></div>
+                <div class="skel skel-stat"></div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="dash-grid">
+                <!-- Leads Over Time Chart -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-area" style="color:#4facfe;"></i> Lead Trends</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrap" id="trendChartWrap">
+                            <div class="skel skel-chart"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stage Distribution Chart -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-chart-doughnut" style="color:#a18cd1;"></i> Stage Breakdown</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="chart-wrap" id="stageChartWrap">
+                            <div class="skel skel-chart"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Funnel + Hot Leads -->
+            <div class="dash-grid-3">
+                <!-- Funnel -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-filter" style="color:#667eea;"></i> Lead Funnel</h2>
+                    </div>
+                    <div class="card-body">
+                        <div id="funnelContainer">
+                            <div class="skel skel-card"></div>
+                            <div class="skel skel-card"></div>
+                            <div class="skel skel-card"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Hot Leads -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-fire" style="color:#e94560;"></i> Hot Leads</h2>
+                    </div>
+                    <div class="card-body" id="hotLeadsBody">
+                        <div class="skel skel-card"></div>
+                        <div class="skel skel-card"></div>
+                        <div class="skel skel-card"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AI Recs + Activity + Reminders -->
+            <div class="dash-grid">
+                <!-- AI Recommendations -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-brain" style="color:#764ba2;"></i> AI Recommendations</h2>
+                    </div>
+                    <div class="card-body" id="recsBody">
+                        <div class="skel skel-card"></div>
+                        <div class="skel skel-card"></div>
+                    </div>
+                </div>
+
+                <!-- Activity Feed -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-stream" style="color:#4facfe;"></i> Activity Feed</h2>
+                    </div>
+                    <div class="card-body">
+                        <div class="activity-feed" id="activityBody">
+                            <div class="skel skel-card"></div>
+                            <div class="skel skel-card"></div>
+                            <div class="skel skel-card"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Reminders + Recent Leads -->
+            <div class="dash-grid-3">
+                <!-- Recent Leads Table -->
+                <div class="glass-card">
+                    <div class="card-header" style="display:flex;justify-content:space-between;align-items:center;">
+                        <h2><i class="fas fa-table" style="color:#11998e;"></i> Recent Leads</h2>
+                        <a href="/app/leads" class="btn btn-outline btn-sm">View All <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                    <div class="card-body" style="padding:0 22px 22px;">
+                        <div class="leads-table-wrap">
+                            <table>
+                                <thead><tr><th>Name</th><th>Product</th><th>City</th><th>Score</th><th>Stage</th><th>Date</th></tr></thead>
+                                <tbody id="leadsTableBody">
+                                    <tr><td colspan="6"><div class="skel skel-line"></div></td></tr>
+                                    <tr><td colspan="6"><div class="skel skel-line w60"></div></td></tr>
+                                    <tr><td colspan="6"><div class="skel skel-line w40"></div></td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Today's Follow-ups -->
+                <div class="glass-card">
+                    <div class="card-header">
+                        <h2><i class="fas fa-clock" style="color:#f7971e;"></i> Today's Follow-ups</h2>
+                    </div>
+                    <div class="card-body" id="remindersBody">
+                        <div class="skel skel-card"></div>
+                        <div class="skel skel-card"></div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div id="notifContainer"></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="/static/shared.js"></script>
+    <script>
+    /* ═══════════════════════════════════════════
+       DASHBOARD LOGIC
+       ═══════════════════════════════════════════ */
+
+    // ── Layout injection ──
+    document.getElementById('sidebarContainer').innerHTML = generateSidebar('dashboard');
+    document.getElementById('topbarContainer').innerHTML = generateTopbar('Dashboard', `
+        <div class="sync-status">
+            <span class="sync-dot pending" id="syncDot"></span>
+            <span id="syncText">Connecting...</span>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="syncLeads()" id="syncBtn">
+            <i class="fas fa-sync-alt"></i> Sync
+        </button>
+    `);
+    document.getElementById('notifContainer').innerHTML = generateNotifPanel();
+
+    // ── Chart instances ──
+    let trendChart = null;
+    let stageChart = null;
+
+    // ── Greeting ──
+    function setGreeting() {
+        const h = new Date().getHours();
+        const el = document.getElementById('greetIcon');
+        const txt = document.getElementById('greetText');
+        const datEl = document.getElementById('greetDate');
+        if (h < 12) { el.textContent = '🌅'; txt.textContent = 'Good morning'; }
+        else if (h < 17) { el.textContent = '☀️'; txt.textContent = 'Good afternoon'; }
+        else if (h < 21) { el.textContent = '🌇'; txt.textContent = 'Good evening'; }
+        else { el.textContent = '🌙'; txt.textContent = 'Good night'; }
+        datEl.textContent = new Date().toLocaleDateString('en-IN', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+    }
+    setGreeting();
+
+    // ── Animated counter ──
+    function animateValue(el, target, duration = 1200) {
+        if (!el) return;
+        const start = 0;
+        const startTime = performance.now();
+        function tick(now) {
+            const elapsed = now - startTime;
+            const progress = Math.min(elapsed / duration, 1);
+            const eased = 1 - Math.pow(1 - progress, 3); // ease-out cubic
+            el.textContent = Math.round(start + (target - start) * eased).toLocaleString('en-IN');
+            if (progress < 1) requestAnimationFrame(tick);
+        }
+        requestAnimationFrame(tick);
+    }
+
+    // ── Sparkline SVG ──
+    function sparklineSVG(data) {
+        if (!data || data.length < 2) data = [0, 1, 3, 2, 5, 4, 6];
+        const w = 80, h = 30, pad = 2;
+        const max = Math.max(...data, 1);
+        const min = Math.min(...data, 0);
+        const range = max - min || 1;
+        const pts = data.map((v, i) => {
+            const x = pad + (i / (data.length - 1)) * (w - pad * 2);
+            const y = h - pad - ((v - min) / range) * (h - pad * 2);
+            return `${x},${y}`;
+        }).join(' ');
+        return `<svg class="stat-sparkline" viewBox="0 0 ${w} ${h}"><polyline points="${pts}"/></svg>`;
+    }
+
+    // ── Render Stats ──
+    function renderStats(stats) {
+        const cards = [
+            { label: 'Total Leads', key: 'total', icon: 'fa-users', grad: 'grad-blue', spark: stats.trend_total },
+            { label: "Today's Leads", key: 'today', icon: 'fa-user-plus', grad: 'grad-green', spark: stats.trend_today },
+            { label: 'This Week', key: 'this_week', icon: 'fa-calendar-week', grad: 'grad-orange', spark: stats.trend_week },
+            { label: 'Unread', key: 'unread', icon: 'fa-envelope-open-text', grad: 'grad-purple', spark: stats.trend_unread },
+        ];
+        document.getElementById('statsRow').innerHTML = cards.map((c, i) => `
+            <div class="stat-card-v2 ${c.grad} loaded" style="animation-delay:${i * 0.08}s;">
+                <div class="stat-icon-bg"><i class="fas ${c.icon}"></i></div>
+                <div class="stat-label">${c.label}</div>
+                <div class="stat-value" data-counter="${stats[c.key] || 0}">0</div>
+                <div class="stat-footer">
+                    <div class="stat-change"><i class="fas fa-arrow-up"></i> live</div>
+                    ${sparklineSVG(c.spark)}
+                </div>
+            </div>
+        `).join('');
+        // Trigger counters
+        document.querySelectorAll('.stat-value[data-counter]').forEach(el => {
+            animateValue(el, parseInt(el.dataset.counter) || 0);
+        });
+    }
+
+    // ── Render Revenue with progress rings ──
+    function renderRevenue(revenue) {
+        const pipeline = revenue.total_pipeline || 0;
+        const won = revenue.won_revenue || 0;
+        const pct = pipeline > 0 ? Math.round((won / pipeline) * 100) : 0;
+        const wonOffset = 251.2 - (251.2 * Math.min(pct, 100) / 100);
+        const dealsPct = Math.min((revenue.deals_won || 0) / Math.max(revenue.total_deals || 1, 1) * 100, 100);
+        const dealsOffset = 251.2 - (251.2 * dealsPct / 100);
+
+        document.getElementById('revenueRow').innerHTML = `
+            <div class="rev-card pipeline">
+                <div class="rev-card-top">
+                    <div>
+                        <h4>Total Pipeline</h4>
+                        <div class="rev-amount" data-counter="${pipeline}">₹0</div>
+                        <div class="rev-sub">${revenue.total_deals || 0} active deals</div>
+                    </div>
+                    <svg class="progress-ring" viewBox="0 0 90 90">
+                        <circle class="ring-bg" cx="45" cy="45" r="40"/>
+                        <circle class="ring-fill" cx="45" cy="45" r="40" style="stroke-dashoffset:${wonOffset}"/>
+                        <text class="ring-text" x="45" y="45">${pct}%</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="rev-card won">
+                <div class="rev-card-top">
+                    <div>
+                        <h4>Won Revenue</h4>
+                        <div class="rev-amount" data-counter="${won}">₹0</div>
+                        <div class="rev-sub">${revenue.deals_won || 0} deals closed</div>
+                    </div>
+                    <svg class="progress-ring" viewBox="0 0 90 90">
+                        <circle class="ring-bg" cx="45" cy="45" r="40"/>
+                        <circle class="ring-fill" cx="45" cy="45" r="40" style="stroke-dashoffset:${dealsOffset}"/>
+                        <text class="ring-text" x="45" y="45">${revenue.deals_won || 0}</text>
+                    </svg>
+                </div>
+            </div>
+        `;
+        // Animate currency counters
+        document.querySelectorAll('.rev-amount[data-counter]').forEach(el => {
+            const target = parseInt(el.dataset.counter) || 0;
+            const start = performance.now();
+            function tick(now) {
+                const p = Math.min((now - start) / 1500, 1);
+                const eased = 1 - Math.pow(1 - p, 3);
+                el.textContent = formatCurrency(Math.round(target * eased));
+                if (p < 1) requestAnimationFrame(tick);
+            }
+            requestAnimationFrame(tick);
+        });
+    }
+
+    // ── Render Funnel ──
+    function renderFunnel(funnel) {
+        const stages = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+        const total = stages.reduce((s, k) => s + (funnel[k] || 0), 0) || 1;
+        const maxCount = Math.max(...stages.map(k => funnel[k] || 0), 1);
+
+        document.getElementById('funnelContainer').innerHTML = `
+            <div class="funnel-visual">
+                ${stages.map(s => {
+                    const count = funnel[s] || 0;
+                    const pct = Math.max((count / maxCount) * 100, count > 0 ? 8 : 2);
+                    return `
+                    <div class="funnel-step">
+                        <div class="funnel-step-label">${s}</div>
+                        <div class="funnel-step-bar-wrap">
+                            <div class="funnel-step-bar c-${s}" data-width="${pct}%"></div>
+                        </div>
+                        <div class="funnel-step-count">${count}</div>
+                    </div>`;
+                }).join('')}
+            </div>
+        `;
+        // Animate bar widths
+        requestAnimationFrame(() => {
+            document.querySelectorAll('.funnel-step-bar[data-width]').forEach(bar => {
+                bar.style.width = bar.dataset.width;
+            });
+        });
+    }
+
+    // ── Charts ──
+    function renderTrendChart(data) {
+        const wrap = document.getElementById('trendChartWrap');
+        wrap.innerHTML = '<canvas id="trendCanvas"></canvas>';
+        const ctx = document.getElementById('trendCanvas').getContext('2d');
+
+        const labels = (data.labels || ['Mon','Tue','Wed','Thu','Fri','Sat','Sun']);
+        const values = (data.values || [3, 7, 5, 12, 9, 15, 8]);
+
+        const gradient = ctx.createLinearGradient(0, 0, 0, 280);
+        gradient.addColorStop(0, 'rgba(79,172,254,0.3)');
+        gradient.addColorStop(1, 'rgba(79,172,254,0.01)');
+
+        trendChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels,
+                datasets: [{
+                    label: 'New Leads',
+                    data: values,
+                    borderColor: '#4facfe',
+                    backgroundColor: gradient,
+                    borderWidth: 3,
+                    fill: true,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 7,
+                    pointBackgroundColor: '#fff',
+                    pointBorderColor: '#4facfe',
+                    pointBorderWidth: 2,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1200, easing: 'easeOutQuart' },
+                interaction: { mode: 'index', intersect: false },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        titleFont: { size: 13, weight: '600' },
+                        bodyFont: { size: 12 },
+                        cornerRadius: 8,
+                        padding: 12,
+                    }
+                },
+                scales: {
+                    x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                    y: { beginAtZero: true, grid: { color: 'rgba(0,0,0,0.04)' }, ticks: { font: { size: 11 } } }
+                }
+            }
+        });
+    }
+
+    function renderStageChart(funnel) {
+        const wrap = document.getElementById('stageChartWrap');
+        wrap.innerHTML = '<canvas id="stageCanvas"></canvas>';
+        const ctx = document.getElementById('stageCanvas').getContext('2d');
+        const stages = ['new', 'contacted', 'qualified', 'proposal', 'negotiation', 'won', 'lost'];
+        const colors = ['#4facfe', '#f093fb', '#667eea', '#0f3460', '#ffd200', '#38ef7d', '#e94560'];
+        const values = stages.map(s => funnel[s] || 0);
+
+        stageChart = new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: stages.map(s => s.charAt(0).toUpperCase() + s.slice(1)),
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    hoverOffset: 12,
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '68%',
+                animation: { animateRotate: true, duration: 1200, easing: 'easeOutQuart' },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { padding: 16, usePointStyle: true, pointStyle: 'circle', font: { size: 11 } }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        cornerRadius: 8,
+                        padding: 12,
+                        callbacks: {
+                            label: function(ctx) {
+                                const total = ctx.dataset.data.reduce((a, b) => a + b, 0);
+                                const pct = total ? Math.round(ctx.raw / total * 100) : 0;
+                                return ` ${ctx.label}: ${ctx.raw} (${pct}%)`;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    }
+
+    // ── Hot Leads ──
+    function renderHotLeads(leads) {
+        const body = document.getElementById('hotLeadsBody');
+        if (!leads.length) {
+            body.innerHTML = '<div class="empty-box"><div class="empty-icon">🔥</div><p>No hot leads yet</p></div>';
+            return;
+        }
+        body.innerHTML = leads.map(l => {
+            const score = l.lead_score || l.ai_score || 0;
+            const cls = score >= 75 ? 'high' : score >= 50 ? 'med' : 'low';
+            return `
+            <div class="hot-lead-item" onclick="window.location.href='/app/leads'" style="cursor:pointer;">
+                <div class="hot-lead-score ${cls}">${score}</div>
+                <div class="hot-lead-info">
+                    <div class="hot-lead-name">${escapeHtml(l.sender_name || 'Unknown')}</div>
+                    <div class="hot-lead-product">${escapeHtml(l.query_product_name || 'N/A')}</div>
+                </div>
+                ${typeof getStageBadge === 'function' ? getStageBadge(l.lead_stage) : ''}
+                <div class="hot-lead-arrow"><i class="fas fa-chevron-right"></i></div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Activity Feed ──
+    function renderActivity(activities) {
+        const body = document.getElementById('activityBody');
+        if (!activities.length) {
+            body.innerHTML = '<div class="empty-box"><div class="empty-icon"><i class="fas fa-stream"></i></div><p>No recent activity</p></div>';
+            return;
+        }
+        const icons = { note: 'fa-sticky-note', call: 'fa-phone', email: 'fa-envelope', whatsapp: 'fa-comment', meeting: 'fa-handshake', stage_change: 'fa-exchange-alt' };
+        body.innerHTML = activities.map(a => `
+            <div class="activity-entry">
+                <div class="activity-dot ${a.activity_type}"><i class="fas ${icons[a.activity_type] || 'fa-circle'}"></i></div>
+                <div class="activity-text">
+                    <div><strong>${escapeHtml(a.lead_name)}</strong> — ${escapeHtml(a.content)}</div>
+                    <div class="activity-time">${timeAgo(a.created_at)}</div>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Recommendations ──
+    function renderRecommendations(recs) {
+        const body = document.getElementById('recsBody');
+        if (!recs.length) {
+            body.innerHTML = '<div class="empty-box"><div class="empty-icon">🧠</div><p>No recommendations right now</p></div>';
+            return;
+        }
+        body.innerHTML = recs.map(r => `
+            <div class="rec-item">
+                <div class="rec-emoji">${r.icon}</div>
+                <div class="rec-text">
+                    <h4>${escapeHtml(r.title)}</h4>
+                    <p>${escapeHtml(r.description)}</p>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // ── Reminders ──
+    function renderReminders(reminders) {
+        const body = document.getElementById('remindersBody');
+        if (!reminders.length) {
+            body.innerHTML = '<div class="empty-box"><div class="empty-icon"><i class="fas fa-check-circle" style="color:var(--green);"></i></div><p>All clear! No pending follow-ups.</p></div>';
+            return;
+        }
+        body.innerHTML = reminders.map(r => {
+            const dt = new Date(r.remind_at);
+            const timeStr = dt.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+            return `
+            <div class="reminder-entry">
+                <div class="reminder-badge">${timeStr}</div>
+                <div class="reminder-content">
+                    <div class="msg">${escapeHtml(r.message)}</div>
+                    <div class="lead-ref">${escapeHtml(r.lead_name)} — ${escapeHtml(r.lead_product)}</div>
+                </div>
+            </div>`;
+        }).join('');
+    }
+
+    // ── Recent Leads Table ──
+    async function loadRecentLeads() {
+        try {
+            const res = await apiCall('GET', '/api/leads?per_page=5&sort_by=ai_score&sort_dir=desc');
+            if (!res) return;
+            const data = await res.json();
+            const leads = data.leads || [];
+            const tbody = document.getElementById('leadsTableBody');
+
+            if (!leads.length) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-box"><div class="empty-icon">📥</div><p>No leads yet. Click Sync to fetch from IndiaMART.</p></div></td></tr>';
+                return;
+            }
+
+            tbody.innerHTML = leads.map(l => `
+                <tr style="cursor:pointer;" onclick="window.location.href='/app/leads'">
+                    <td class="lead-name-cell">${escapeHtml(l.sender_name || '—')}</td>
+                    <td class="lead-product-cell">${escapeHtml(l.query_product_name || '—')}</td>
+                    <td>${escapeHtml(l.sender_city || '—')}</td>
+                    <td>${typeof getScoreBadge === 'function' ? getScoreBadge(l.lead_score || l.ai_score || 50) : (l.lead_score || l.ai_score || 50)}</td>
+                    <td>${typeof getStageBadge === 'function' ? getStageBadge(l.lead_stage) : (l.lead_stage || '—')}</td>
+                    <td>${typeof formatDate === 'function' ? formatDate(l.query_time || l.created_at) : (l.query_time || l.created_at || '—')}</td>
+                </tr>
+            `).join('');
+        } catch (e) {
+            document.getElementById('leadsTableBody').innerHTML = '<tr><td colspan="6"><div class="empty-box"><i class="fas fa-exclamation-triangle" style="color:var(--red);font-size:20px;"></i><p>Failed to load leads</p></div></td></tr>';
+        }
+    }
+
+    // ── Main data loader ──
+    async function loadDashboard() {
+        try {
+            // Load stats
+            const statsRes = await apiCall('GET', '/api/leads/stats');
+            if (statsRes) {
+                const stats = await statsRes.json();
+                renderStats(stats);
+            }
+
+            // Load enhanced dashboard
+            const enhRes = await apiCall('GET', '/api/dashboard/enhanced');
+            if (enhRes) {
+                const data = await enhRes.json();
+                renderFunnel(data.funnel || {});
+                renderRevenue(data.revenue || {});
+                renderHotLeads(data.hot_leads || []);
+                renderRecommendations(data.recommendations || []);
+                renderActivity(data.recent_activities || []);
+                renderReminders(data.today_reminders || []);
+
+                // Charts
+                renderTrendChart(data.lead_trend || {});
+                renderStageChart(data.funnel || {});
+            }
+
+            // Sync indicator
+            document.getElementById('syncDot').className = 'sync-dot ok';
+            document.getElementById('syncText').textContent = 'Connected';
+        } catch (e) {
+            console.error('Dashboard load error:', e);
+            document.getElementById('syncDot').className = 'sync-dot err';
+            document.getElementById('syncText').textContent = 'Error';
+        }
+    }
+
+    // ── Sync action ──
+    async function syncLeads() {
+        const btn = document.getElementById('syncBtn');
+        btn.disabled = true;
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+        try {
+            const res = await apiCall('POST', '/api/leads/sync');
+            if (!res) return;
+            const data = await res.json();
+            showToast(`Synced ${data.saved || data.count || 0} new leads`, 'success');
+            loadDashboard();
+            loadRecentLeads();
+        } catch (e) {
+            showToast('Sync failed: ' + e.message, 'error');
+        } finally {
+            btn.disabled = false;
+            btn.innerHTML = '<i class="fas fa-sync-alt"></i> Sync';
+        }
+    }
+
+    // ── Init ──
+    if (authGuard()) {
+        initLeadFlow();
+        loadUser();
+        loadDashboard();
+        loadRecentLeads();
+    }
+    </script>
+</body>
+</html>
